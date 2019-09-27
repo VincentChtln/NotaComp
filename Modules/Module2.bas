@@ -123,11 +123,11 @@ End Sub
 ' Retourne l'index de l'élève s'il est dans la liste de la classe donnée en argument, -1 sinon
 ' valeurExacte = True -> on cherche la place de l'élève donné en argument (supposant qu'il fait partie de la classe)
 ' valeurExacte = False -> on cherche où intégrer l'élève pour respecter l'ordre alphabéthique
-Function chercherIndexEleve(nomComplet As String, indexClasse As Integer, valeurExacte As Boolean)
-    Dim chercherIndexEleve As Integer, resultatPrec As Integer
+Function chercherIndexEleve(nomComplet As String, indexClasse As Integer, valeurExacte As Boolean) As Integer
+    Dim resultatPrec As Integer
     chercherIndexEleve = -1
     resultatPrec = -1
-    nombreEleve = nombreEleve(Sheets(Page1).Cells(12 + indexClasse, 6).Value)
+    nombreEleve = getNombreEleves(Sheets(Page1).Cells(12 + indexClasse, 6).Value)
     For indexEleve = 1 To nombreEleve
         If Not (valeurExacte) Then
             If StrComp(nomComplet, Sheets(Page2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value) <> resultatPrec Then chercherIndexEleve = indexEleve - 1
@@ -217,7 +217,7 @@ End Sub
 
 Sub btnSupprimerEleve_Click()
     Dim indexClasse As Integer
-    Dim nomEleve As String, prenomEleve As String
+    Dim nomEleve As String, prenomEleve As String, nomComplet As String
     
     ' Classe
     indexClasse = WorksheetFunction.RoundUp(Val(Right(Application.Caller, 1)) / 2, 0)
@@ -233,7 +233,9 @@ Sub btnSupprimerEleve_Click()
         If chercherIndexEleve(nomComplet, indexClasse, True) <> -1 Then
             supprimerEleve indexClasse, nomEleve, prenomEleve
             MsgBox ("Élève supprimé !")
-        Else: MsgBox ("L'élève '" & nomComplet & "' n'a pas été trouvé dans la classe " & nomClasse & ". Veuillez vérifier l'orthographe.")
+        Else
+            MsgBox ("L'élève '" & nomComplet & "' n'a pas été trouvé dans la classe " & nomClasse & ". Veuillez vérifier l'orthographe.")
+        End If
     Else
         MsgBox ("Opération annulée.")
     End If
