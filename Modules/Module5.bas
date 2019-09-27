@@ -113,6 +113,7 @@ Public Sub deleteModulesInFolder(strFolderPath As String)
 End Sub
 
 Public Sub importModulesToVBProject()
+    Dim wbTarget As Workbook
     Dim strWBFolder As String, strWBName As String
     Dim strImportFolder As String, strModulePath As String
     Dim bWBOK As Boolean, bImportFolderOK As Boolean
@@ -136,9 +137,10 @@ Public Sub importModulesToVBProject()
             End If
         End If
     Wend
+    Set wbTarget = Workbooks(strWBName)
     
     ' Vérifie si le projet VB n'est pas protégé
-    If isVBProjectProtected(Workbooks(strWBName)) Then
+    If isVBProjectProtected(wbTarget) Then
         MsgBox ("Projet VBA annulé, accès refusé. Opération annulée.")
         Exit Sub
     End If
@@ -159,20 +161,30 @@ Public Sub importModulesToVBProject()
     Wend
     
     ' Supprime les anciens modules
-    Call deleteModulesInVBProject(Workbooks(strWBName))
+    Call deleteModulesInVBProject(wbTarget)
     
     ' Import les nouveaux modules
     For indexModule = 1 To 4
         strModulePath = strImportFolder & "Module" & indexModule & ".bas"
         If FSO.FileExists(strModulePath) Then
-            Workbooks(strWBName).VBProject.VBComponents.Import strModulePath
+            wbTarget.VBProject.VBComponents.Import strModulePath
         Else
             MsgBox ("Import Module" & indexModule & ".bas échoué, fichier non trouvé.")
         End If
     Next indexModule
     
-    MsgBox ("Import terminé.")
+    ' Modifie la date de dernière MAJ
+    Application.ScreenUpdating = False
+    With wbTarget.Sheets(strPage1)
+        .Unprotect strPassword
+        .Range("G5").Value = strVersion
+        .Range("G6").Value = Format(Now, "dd/mm/yyyy")
+        .Protect strPassword
+    End With
+    Application.ScreenUpdating = True
     
+    MsgBox ("Import terminé.")
+    Set wbTarget = Nothing
 End Sub
 
 Public Sub exportModulesToFolder()

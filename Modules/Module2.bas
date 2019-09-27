@@ -6,10 +6,10 @@ Attribute VB_Name = "Module2"
 Sub creerListeEleve()
 
     ' Creation page
-    ActiveWorkbook.Unprotect Password
+    ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
-    Sheets(Sheets.Count).Name = Page2
-    ActiveWorkbook.Protect Password, True, True
+    Sheets(Sheets.Count).Name = strPage2
+    ActiveWorkbook.Protect strPassword, True, True
     Cells.Borders.ColorIndex = 2
     Cells.Locked = True
     
@@ -21,10 +21,10 @@ Sub creerListeEleve()
     End With
     
     ' Creation listes vides
-    For colonne = 1 To (2 * Sheets(Page1).Cells(10, 7).Value)
+    For colonne = 1 To (2 * Sheets(strPage1).Cells(10, 7).Value)
         If colonne Mod 2 = 1 Then
             ' Formatage colonne paire
-            nombreEleves = Sheets(Page1).Cells(12 + (colonne + 1) / 2, 7).Value
+            nombreEleves = Sheets(strPage1).Cells(12 + (colonne + 1) / 2, 7).Value
             Columns(colonne).ColumnWidth = 40
             For ligneBtn = 1 To 2
                 Set buttonCell = Cells(ligneBtn, colonne)
@@ -45,8 +45,8 @@ Sub creerListeEleve()
                 .Borders.ColorIndex = 1
                 .Borders.LineStyle = xlContinuous
                 .Borders.Weight = xlMedium
-                .Interior.ColorIndex = colorindexClasse
-                .Value = Sheets(Page1).Cells(12 + (colonne + 1) / 2, 6).Value
+                .Interior.ColorIndex = intColorClasse
+                .Value = Sheets(strPage1).Cells(12 + (colonne + 1) / 2, 6).Value
                 .HorizontalAlignment = xlHAlignCenter
                 .VerticalAlignment = xlVAlignCenter
                 .Locked = True
@@ -83,9 +83,9 @@ Sub creerListeEleve()
     End With
     
     ' Protection page
-    With Sheets(Page2)
+    With Sheets(strPage2)
         .EnableSelection = xlUnlockedCells
-        .Protect Password
+        .Protect strPassword
     End With
 End Sub
 
@@ -97,20 +97,20 @@ Sub btnCreerTableaux_Click()
     If MsgBox("Êtes-vous sûr(e) de valider ces listes ? Vous pourrez toujours ajouter des élèves mais il sera impossible de recréer les tableaux.", vbYesNo) = vbYes Then
         ' Creation des pages 'Notes' et 'Bilan'
         Dim indexClasse As Integer
-        nombreClasses = Sheets(Page1).Cells(10, 7).Value
+        nombreClasses = getNombreClasses
         For indexClasse = 1 To nombreClasses
-            creerTableauNotes Sheets(Page1).Cells(12 + indexClasse, 6).Value, indexClasse, Sheets(Page1).Cells(12 + indexClasse, 7).Value
-            creerTableauBilan Sheets(Page1).Cells(12 + indexClasse, 6).Value, indexClasse, Sheets(Page1).Cells(12 + indexClasse, 7).Value
+            creerTableauNotes Sheets(strPage1).Cells(12 + indexClasse, 6).Value, indexClasse, Sheets(strPage1).Cells(12 + indexClasse, 7).Value
+            creerTableauBilan Sheets(strPage1).Cells(12 + indexClasse, 6).Value, indexClasse, Sheets(strPage1).Cells(12 + indexClasse, 7).Value
         Next indexClasse
         
         ' Verouillage des listes
-        With Sheets(Page2)
-            .Unprotect Password
+        With Sheets(strPage2)
+            .Unprotect strPassword
             '.Buttons(.Buttons.Count).Delete
             .Cells(2, 2 * nombreClasses + 1).Delete xlShiftUp
             .Cells.Locked = True
             .EnableSelection = xlUnlockedCells
-            .Protect Password
+            .Protect strPassword
         End With
         
         MsgBox ("Tableaux de notes et de bilan créés avec succès !")
@@ -127,12 +127,12 @@ Function chercherIndexEleve(nomComplet As String, indexClasse As Integer, valeur
     Dim resultatPrec As Integer
     chercherIndexEleve = -1
     resultatPrec = -1
-    nombreEleve = getNombreEleves(Sheets(Page1).Cells(12 + indexClasse, 6).Value)
+    nombreEleve = getNombreEleves(Sheets(strPage1).Cells(12 + indexClasse, 6).Value)
     For indexEleve = 1 To nombreEleve
         If Not (valeurExacte) Then
-            If StrComp(nomComplet, Sheets(Page2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value) <> resultatPrec Then chercherIndexEleve = indexEleve - 1
+            If StrComp(nomComplet, Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value) <> resultatPrec Then chercherIndexEleve = indexEleve - 1
         Else
-            If StrComp(nomComplet, Sheets(Page2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value) = 0 Then chercherIndexEleve = indexEleve
+            If StrComp(nomComplet, Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value) = 0 Then chercherIndexEleve = indexEleve
         End If
     Next indexEleve
     MsgBox ("index de l'élève : " & chercherIndexEleve)
@@ -145,7 +145,7 @@ Sub btnAjouterEleve_Click()
     
     ' Classe
     indexClasse = WorksheetFunction.RoundUp(Val(Right(Application.Caller, 1)) / 2, 0)
-    nomClasse = Sheets(Page1).Cells(12 + indexClasse, 6).Value
+    nomClasse = Sheets(strPage1).Cells(12 + indexClasse, 6).Value
 
     ' Eleve
     nomEleve = InputBox("Nom de l'élève à ajouter :")
@@ -164,52 +164,52 @@ End Sub
 
 Sub ajouterEleve(indexClasse As Integer, nomEleve As String, prenomEleve As String)
     nomComplet = UCase(nomEleve) & " " & StrConv(prenomEleve, vbProperCase)
-    nomClasse = Sheets(Page1).Cells(12 + indexClasse, 6).Value
+    nomClasse = Sheets(strPage1).Cells(12 + indexClasse, 6).Value
     Page3 = "Notes (" & nomClasse & ")"
     Page4 = "Bilan (" & nomClasse & ")"
     nombreDomaines = getNombreDomaines
     nombreCompetences = getNombreCompetences
-    nombreEleves = Sheets(Page1).Cells(12 + indexClasse, 7).Value
+    nombreEleves = Sheets(strPage1).Cells(12 + indexClasse, 7).Value
     
     ' Ajout dans page 1 (accueil)
-    Sheets(Page1).Unprotect Password
-    Sheets(Page1).Cells(12 + indexClasse, 7).Value = nombreEleves + 1
-    Sheets(Page1).Protect Password
+    Sheets(strPage1).Unprotect strPassword
+    Sheets(strPage1).Cells(12 + indexClasse, 7).Value = nombreEleves + 1
+    Sheets(strPage1).Protect strPassword
     
     ' Ajout dans page 2 (liste)
-    With Sheets(Page2)
-        .Unprotect Password
+    With Sheets(strPage2)
+        .Unprotect strPassword
         .Cells(3 + nombreEleves, 2 * indexClasse - 1).Insert xlShiftDown, xlFormatFromLeftOrAbove
         .Cells(3 + nombreEleves, 2 * indexClasse - 1).Value = .Cells(3 + nombreEleves + 1, 2 * indexClasse - 1).Value
         .Cells(3 + nombreEleves + 1, 2 * indexClasse - 1).Value = nomComplet
         .Cells.Locked = True
         .EnableSelection = xlUnlockedCells
-        .Protect Password
+        .Protect strPassword
     End With
     
     If Sheets.Count > 3 Then
         nombreEval = Sheets(Page3).Buttons.Count - 1
         ' Ajout dans page 3 (notes)
         With Sheets(Page3)
-            .Unprotect Password
+            .Unprotect strPassword
             .Range(.Cells(5 + nombreEleves, 1), .Cells(5 + nombreEleves, 2 + (nombreCompetences + 1) * nombreEval)).Insert xlDown, xlFormatFromLeftOrAbove
             .Range(.Cells(5 + nombreEleves, 1), .Cells(5 + nombreEleves, 2 + (nombreCompetences + 1) * nombreEval)).Value = .Range(.Cells(5 + nombreEleves + 1, 1), .Cells(5 + nombreEleves + 1, 2 + (nombreCompetences + 1) * nombreEval)).Value
             .Range(.Cells(5 + nombreEleves, 1), .Cells(5 + nombreEleves, 2)).MergeCells = True
             .Range(.Cells(5 + nombreEleves + 1, 1), .Cells(5 + nombreEleves + 1, 2 + (nombreCompetences + 1) * nombreEval)).ClearContents
             .Cells(5 + nombreEleves + 1, 1).Value = nomComplet
             .EnableSelection = xlUnlockedCells
-            .Protect Password
+            .Protect strPassword
         End With
         
         ' Ajout dans page 4 (résultats)
         With Sheets(Page4)
-            .Unprotect Password
+            .Unprotect strPassword
             .Range(.Cells(3 + nombreEleves, 1), .Cells(3 + nombreEleves, 1 + 4 * (nombreCompetences + 1))).Insert xlDown, xlFormatFromLeftOrAbove
             .Range(.Cells(3 + nombreEleves, 1), .Cells(3 + nombreEleves, 1 + 4 * (nombreCompetences + 1))).Value = .Range(.Cells(3 + nombreEleves + 1, 1), .Cells(3 + nombreEleves + 1, 1 + 4 * (nombreCompetences + 1))).Value
             .Range(.Cells(3 + nombreEleves + 1, 1), .Cells(3 + nombreEleves + 1, 1 + 4 * (nombreCompetences + 1))).ClearContents
             .Cells(3 + nombreEleves + 1, 1).Value = nomComplet
             .EnableSelection = xlUnlockedCells
-            .Protect Password
+            .Protect strPassword
         End With
     End If
     
@@ -221,7 +221,7 @@ Sub btnSupprimerEleve_Click()
     
     ' Classe
     indexClasse = WorksheetFunction.RoundUp(Val(Right(Application.Caller, 1)) / 2, 0)
-    nomClasse = Sheets(Page1).Cells(12 + indexClasse, 6).Value
+    nomClasse = Sheets(strPage1).Cells(12 + indexClasse, 6).Value
 
     ' Eleve
     nomEleve = InputBox("Nom de l'élève à supprimer (comme écrit dans la liste) :")

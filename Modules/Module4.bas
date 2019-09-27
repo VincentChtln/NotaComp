@@ -6,10 +6,10 @@ Attribute VB_Name = "Module4"
 Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
 
     ' Creation page
-    ActiveWorkbook.Unprotect Password
+    ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
     Sheets(Sheets.Count).Name = "Bilan (" & nomClasse & ")"
-    ActiveWorkbook.Protect Password, True, True
+    ActiveWorkbook.Protect strPassword, True, True
     With Cells
         .Borders.ColorIndex = 2
         .Locked = True
@@ -47,7 +47,7 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     ' Légende
     With Range("A3")
         .Value = nomClasse
-        .Interior.ColorIndex = colorindexClasse
+        .Interior.ColorIndex = intColorClasse
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
         .Borders.Weight = xlMedium
@@ -56,7 +56,7 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     ' Liste élève
     For indexEleve = 1 To nombreEleves
         With Cells(3 + indexEleve, 1)
-            .Value = Sheets(Page2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
+            .Value = Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
         End With
     Next indexEleve
     With Range(Cells(4, 1), Cells(3 + nombreEleves, 1))
@@ -67,28 +67,28 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     End With
     
     '**** LIGNE EN-TETE + CONTENU ****
-    nombreDomaines = Sheets(Page1).Cells(10, 3).Value
+    nombreDomaines = getNombreDomaines
     With Range(Cells(1, 2), Cells(1, 1 + 4 * (nombreDomaines + 1)))
-        .Interior.ColorIndex = colorindexBilan
+        .Interior.ColorIndex = intColorBilan
         .MergeCells = True
         .Value = "Bilan trimestriel & annuel"
     End With
     For indexDomaine = 1 To nombreDomaines + 1
         If indexDomaine <= nombreDomaines Then
             With Range(Cells(2, 2 + 4 * (indexDomaine - 1)), Cells(2, 5 + 4 * (indexDomaine - 1)))
-                .Interior.ColorIndex = colorindexDomaine
+                .Interior.ColorIndex = intColorDomaine
                 .MergeCells = True
                 .Value = "D" & indexDomaine
             End With
-            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = colorindexDomaine2
+            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = intColorDomaine2
             
         Else
             With Range(Cells(2, 2 + 4 * (indexDomaine - 1)), Cells(2, 5 + 4 * (indexDomaine - 1)))
-                .Interior.ColorIndex = colorindexNote
+                .Interior.ColorIndex = intColorNote
                 .MergeCells = True
                 .Value = "Note globale"
             End With
-            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = colorindexNote2
+            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = intColorNote2
         End If
         Cells(3, 2 + 4 * (indexDomaine - 1)).Value = "1e tri"
         Cells(3, 3 + 4 * (indexDomaine - 1)).Value = "2e tri"
@@ -112,7 +112,7 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect Password
+    ActiveSheet.Protect strPassword
     
 End Sub
 
@@ -124,7 +124,7 @@ Sub btnActualiserResultats_Click()
     nombreDomaines = getNombreDomaines
     
     ' Retrait protection page notes
-    Sheets("Bilan (" & nomClasse & ")").Unprotect Password
+    Sheets("Bilan (" & nomClasse & ")").Unprotect strPassword
     
     For indexTrimestre = 1 To 4
         For indexDomaine = 1 To nombreDomaines
@@ -134,7 +134,7 @@ Sub btnActualiserResultats_Click()
     Next indexTrimestre
     
     ' Protection page notres
-    Sheets("Bilan (" & nomClasse & ")").Protect Password
+    Sheets("Bilan (" & nomClasse & ")").Protect strPassword
     
     MsgBox ("Données mises à jour")
 End Sub
@@ -160,7 +160,7 @@ Sub calculMoyenneDomaine(indexDomaine As Integer, indexTrimestre As Integer)
         ' Calcul indexReference = colonne du domaine concerné
         For domaine = 1 To indexDomaine
             If domaine <> indexDomaine Then
-                indexReference = indexReference + Sheets(Page1).Cells(12 + domaine, 3).Value
+                indexReference = indexReference + getNombreCompetences(domaine)
             End If
         Next domaine
         

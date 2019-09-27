@@ -6,10 +6,10 @@ Attribute VB_Name = "Module3"
 Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
 
     ' Creation page
-    ActiveWorkbook.Unprotect Password
+    ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
     Sheets(Sheets.Count).Name = "Notes (" & nomClasse & ")"
-    ActiveWorkbook.Protect Password, True, True
+    ActiveWorkbook.Protect strPassword, True, True
     With Cells
         .Borders.ColorIndex = 2
         .Locked = True
@@ -43,7 +43,7 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     ' Légende
     With Range("A5")
         .Value = nomClasse
-        .Interior.ColorIndex = colorindexClasse
+        .Interior.ColorIndex = intColorClasse
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
         .Borders.Weight = xlMedium
@@ -62,14 +62,14 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
         .Borders(xlEdgeLeft).Weight = xlMedium
         .Borders(xlEdgeRight).Weight = xlMedium
     End With
-    Range("B1").Interior.ColorIndex = colorindexEval
-    Range("B3").Interior.ColorIndex = colorindexDomaine
-    Range("B4").Interior.ColorIndex = colorindexDomaine2
+    Range("B1").Interior.ColorIndex = intColorEval
+    Range("B3").Interior.ColorIndex = intColorDomaine
+    Range("B4").Interior.ColorIndex = intColorDomaine2
     
     ' Liste élève
     For indexEleve = 1 To nombreEleves
         With Cells(5 + indexEleve, 1)
-            .Value = Sheets(Page2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
+            .Value = Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
         End With
         Range(Cells(5 + indexEleve, 1), Cells(5 + indexEleve, 2)).MergeCells = True
     Next indexEleve
@@ -95,7 +95,7 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect Password:=Password
+    ActiveSheet.Protect strPassword:=strPassword
     
 End Sub
 
@@ -103,28 +103,23 @@ Sub btnAjouterEvaluation_Click()
 
     Dim nombreEleves As Integer, nombreDomaines As Integer, nombreCompetences As Integer, colonneDepart As Integer, indexEval As Integer, indexDomaine As Integer
     Dim totalCompetences As Integer
-    nombreDomaines = Sheets(Page1).Cells(10, 3).Value
-    With Sheets(Page1)
-        nombreEleves = WorksheetFunction.VLookup(ActiveSheet.Cells(5, 1).Value, .Range(.Cells(13, 6), .Cells(12 + .Cells(10, 7).Value, 7)), 2, False)
-    End With
-    
+    nombreDomaines = getNombreDomaines
+    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+        
     ' Determine la colonne où ajouter l'éval
     indexEval = ActiveSheet.Buttons.Count - 1
-    nombreCompetences = 0
-    For indexDomaine = 1 To nombreDomaines
-        nombreCompetences = nombreCompetences + Sheets(Page1).Cells(12 + indexDomaine, 3).Value
-    Next indexDomaine
+    nombreCompetences = getNombreCompetences
     colonneDepart = 3 + indexEval * (nombreCompetences + 1)
     
     ' Retrait protection feuille
-    ActiveSheet.Unprotect Password
+    ActiveSheet.Unprotect strPassword
     
     ' Ajout de l'évaluation
     ajouterEvaluation (colonneDepart)
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect Password:=Password
+    ActiveSheet.Protect strPassword:=strPassword
     
     MsgBox ("Évaluation ajoutée")
 
@@ -135,25 +130,24 @@ Sub ajouterEvaluation(colonneDepart As Integer)
     Dim indexDomaine As Integer, indexCompetences As Integer
     
     ' Calcul données nécessaires
-    nombreDomaines = Sheets(Page1).Cells(10, 3).Value
-    With Sheets(Page1)
-        nombreEleves = WorksheetFunction.VLookup(ActiveSheet.Cells(5, 1).Value, .Range(.Cells(13, 6), .Cells(12 + .Cells(10, 7).Value, 7)), 2, False)
-    End With
+    nombreDomaines = getNombreDomaines
+    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
     
     ' Domaines/Compétences
     totalCompetences = 0
     For indexDomaine = 1 To nombreDomaines
-        For indexCompetence = 1 To Sheets(Page1).Cells(12 + indexDomaine, 3).Value
+        intNombreCompetences = getNombreCompetences(indexDomaine)
+        For indexCompetence = 1 To intNombreCompetences
             totalCompetences = totalCompetences + 1
             Columns(colonneDepart + totalCompetences - 1).ColumnWidth = 3
             With Cells(4, colonneDepart + totalCompetences - 1)
                 .Value = "D" & indexDomaine & "/" & indexCompetence
                 .Orientation = xlUpward
-                .Interior.ColorIndex = colorindexDomaine2
+                .Interior.ColorIndex = intColorDomaine2
             End With
         Next indexCompetence
         Cells(3, colonneDepart + totalCompetences - indexCompetence + 1).Value = "D" & indexDomaine
-        Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(3, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = colorindexDomaine
+        Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(3, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = intColorDomaine
         Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(3, colonneDepart + totalCompetences - 1)).MergeCells = True
         With Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(5 + nombreEleves, colonneDepart + totalCompetences - 1))
             .Borders.ColorIndex = xlColorIndexAutomatic
@@ -169,7 +163,7 @@ Sub ajouterEvaluation(colonneDepart As Integer)
     
     ' Infos Eval
     moitieCompetences = (totalCompetences - totalCompetences Mod 2) / 2
-    Range(Cells(1, colonneDepart), Cells(1, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = colorindexEval
+    Range(Cells(1, colonneDepart), Cells(1, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = intColorEval
     Range(Cells(1, colonneDepart), Cells(1, colonneDepart + totalCompetences - 1)).MergeCells = True
     Range(Cells(2, colonneDepart), Cells(2, colonneDepart + moitieCompetences - 1)).MergeCells = True
     Range(Cells(2, colonneDepart + moitieCompetences), Cells(2, colonneDepart + totalCompetences - 1)).MergeCells = True
@@ -180,13 +174,13 @@ Sub ajouterEvaluation(colonneDepart As Integer)
         .OnAction = "btnCalculNote_Click"
     End With
     With Range(Cells(3, colonneDepart + totalCompetences), Cells(5, colonneDepart + totalCompetences))
-        .Interior.ColorIndex = colorindexNote
+        .Interior.ColorIndex = intColorNote
         .MergeCells = True
         .Orientation = xlUpward
         .Value = "Note / 20"
         .Columns.ColumnWidth = 6
     End With
-    Range(Cells(6, colonneDepart + totalCompetences), Cells(5 + nombreEleves, colonneDepart + totalCompetences)).Interior.ColorIndex = colorindexNote2
+    Range(Cells(6, colonneDepart + totalCompetences), Cells(5 + nombreEleves, colonneDepart + totalCompetences)).Interior.ColorIndex = intColorNote2
     With Range(Cells(3, colonneDepart + totalCompetences), Cells(5 + nombreEleves, colonneDepart + totalCompetences))
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
@@ -217,21 +211,18 @@ Sub btnCalculNote_Click()
 
     ' Determiner éval à calculer
     indexEval = Val(Right(Application.Caller, 1)) - 1
-    nombreCompetences = 0
-    For indexDomaine = 1 To Sheets(Page1).Cells(10, 3).Value
-        nombreCompetences = nombreCompetences + Sheets(Page1).Cells(12 + indexDomaine, 3).Value
-    Next indexDomaine
+    nombreCompetences = getNombreCompetences
     colonneDepart = 3 + (indexEval - 1) * (nombreCompetences + 1)
     
     ' Retrait protection feuille
-    ActiveSheet.Unprotect Password
+    ActiveSheet.Unprotect strPassword
     
     ' Calcul note éval
     calculNote (colonneDepart)
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect Password
+    ActiveSheet.Protect strPassword
     
 End Sub
 
@@ -239,12 +230,8 @@ Sub calculNote(colonneDepart As Integer)
     Dim lettre As String
 
     ' Calcul données nécessaires
-    With Sheets(Page1)
-        nombreEleves = WorksheetFunction.VLookup(ActiveSheet.Cells(5, 1).Value, .Range(.Cells(13, 6), .Cells(12 + .Cells(10, 7).Value, 7)), 2, False)
-    End With
-    For indexDomaine = 1 To Sheets(Page1).Cells(10, 3).Value
-        nombreCompetences = nombreCompetences + Sheets(Page1).Cells(12 + indexDomaine, 3).Value
-    Next indexDomaine
+    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+    nombreCompetences = getNombreCompetences
     
     ' Calcul note éval
     For indexEleve = 1 To nombreEleves
