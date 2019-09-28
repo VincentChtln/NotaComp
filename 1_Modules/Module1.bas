@@ -1,5 +1,5 @@
 Attribute VB_Name = "Module1"
-Global Const strVersion As String = "2.0.1"
+Global Const strVersion As String = "v 2.1"
 ' Nom des pages & protection
 Global Const strPage1 As String = "Page d'accueil"
 Global Const strPage2 As String = "Liste de classe"
