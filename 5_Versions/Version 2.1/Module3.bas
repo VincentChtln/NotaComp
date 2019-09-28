@@ -1,56 +1,14 @@
 Attribute VB_Name = "Module3"
-' ##################################
-' PAGE 3 (entrée notes)
-' ##################################
-
-Option Explicit
-
 ' **********************************
-' FONCTIONS
-' lettreToValeur(lettre As String) As Integer
-' valeurToLettre(valeur As Integer) As String
-' **********************************
-
-Function lettreToValeur(strLettre As String) As Integer
-    Dim intAsciiLettre As String
-    intAsciiLettre = Asc(strLettre)
-    If intAsciiLettre > 64 And intAsciiLettre < 70 Then
-        lettreToValeur = 69 - intAsciiLettre
-    Else
-        lettreToValeur = 0
-    End If
-End Function
-
-Function valeurToLettre(intValeur As Integer) As String
-    If intValeur >= 0 And intValeur <= 4 Then
-        Select Case intValeur
-            Case Is > 3.3
-                valeurToLettre = "A"
-            Case Is > 2.3
-                valeurToLettre = "B"
-            Case Is > 1
-                valeurToLettre = "C"
-            Case Is > 0
-                valeurToLettre = "D"
-            Case Else
-                valeurToLettre = "E"
-        End Select
-    Else
-        valeurToLettre = "Z"
-    End If
-End Function
-
-' **********************************
-' PROCÉDURES
+' Page 3 (entrée notes) - Procédure & fonctions
 ' **********************************
 
 Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
 
-    ' Deverouillage
     Application.ScreenUpdating = True
-    ActiveWorkbook.Unprotect strPassword
     
     ' Creation page
+    ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
     Sheets(Sheets.Count).Name = "Notes (" & nomClasse & ")"
     ActiveWorkbook.Protect strPassword, True, True
@@ -137,11 +95,11 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     ajouterEvaluation (colonneDepart)
     
     
-    ' Verouillage
+    ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
     ActiveSheet.Protect strPassword
-    Application.ScreenUpdating = True
     
+    Application.ScreenUpdating = True
     
 End Sub
 
@@ -290,7 +248,7 @@ Sub calculNote(colonneDepart As Integer)
         For indexCompetence = 1 To nombreCompetences
             lettre = ActiveSheet.Cells(5 + indexEleve, colonneDepart + indexCompetence - 1).Value
             coeffCompetence = ActiveSheet.Cells(5, colonneDepart + indexCompetence - 1).Value
-            If StrComp(lettre, vbNullString) <> 0 And IsEmpty(coeffCompetence) = False Then
+            If StrComp(lettre, "") <> 0 And IsEmpty(coeffCompetence) = False Then
                 somme = somme + lettreToValeur(lettre) * coeffCompetence
                 diviseur = diviseur + coeffCompetence
             End If
@@ -298,7 +256,35 @@ Sub calculNote(colonneDepart As Integer)
         If diviseur <> 0 Then
             Cells(5 + indexEleve, colonneDepart + nombreCompetences).Value = Format(5 * somme / diviseur, "Standard")
         ElseIf somme = 0 And diviseur = 0 Then
-            Cells(5 + indexEleve, colonneDepart + nombreCompetences).Value = vbNullString
+            Cells(5 + indexEleve, colonneDepart + nombreCompetences).Value = ""
         End If
     Next indexEleve
 End Sub
+
+Function lettreToValeur(lettre As String)
+    asciiLettre = Asc(lettre)
+    If asciiLettre > 64 And asciiLettre < 70 Then
+        lettreToValeur = 69 - asciiLettre
+    Else
+        lettreToValeur = 0
+    End If
+End Function
+
+Function valeurToLettre(valeur As Integer)
+    If valeur >= 0 And valeur <= 4 Then
+        Select Case valeur
+            Case Is > 3.3
+                valeurToLettre = "A"
+            Case Is > 2.3
+                valeurToLettre = "B"
+            Case Is > 1
+                valeurToLettre = "C"
+            Case Is > 0
+                valeurToLettre = "D"
+            Case Else
+                valeurToLettre = "E"
+        End Select
+    Else
+        valeurToLettre = "Z"
+    End If
+End Function

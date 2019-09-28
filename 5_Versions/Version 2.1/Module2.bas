@@ -1,18 +1,6 @@
 Attribute VB_Name = "Module2"
-' ##################################
-' PAGE 2 (listes élèves)
-' ##################################
-
-Option Explicit
-
 ' **********************************
-' FONCTIONS
-' **********************************
-
-' Aucune fonction
-
-' **********************************
-' PROCÉDURES
+' Page 2 (listes élèves) - Procédure & fonctions
 ' **********************************
 
 Sub creerListeEleve()

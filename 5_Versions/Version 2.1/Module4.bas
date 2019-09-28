@@ -1,18 +1,6 @@
 Attribute VB_Name = "Module4"
-' ##################################
-' PAGE 4 (résultats élèves)
-' ##################################
-
-Option Explicit
-
 ' **********************************
-' FONCTIONS
-' **********************************
-
-' Aucune fonction
-
-' **********************************
-' PROCÉDURES
+' Page 4 (résultats élèves) - Procédure & fonctions
 ' **********************************
 
 Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
@@ -191,7 +179,7 @@ Sub calculMoyenneDomaine(indexDomaine As Integer, indexTrimestre As Integer)
                     For indexCompetence = indexReference To indexReference + nombreCompetences - 1
                         lettre = Sheets("Notes (" & nomClasse & ")").Cells(5 + indexEleve, 2 + (indexEval - 1) * (nombreTotalCompetences + 1) + indexCompetence).Value
                         coeffCompetence = Sheets("Notes (" & nomClasse & ")").Cells(5, 2 + (indexEval - 1) * (nombreTotalCompetences + 1) + indexCompetence).Value
-                        If StrComp(lettre, vbNullString) <> 0 And IsEmpty(coeffCompetence) = False Then
+                        If StrComp(lettre, "") <> 0 And IsEmpty(coeffCompetence) = False Then
                             somme = somme + coeffCompetence * lettreToValeur(lettre)
                             diviseur = diviseur + coeffCompetence
                         End If
@@ -201,7 +189,7 @@ Sub calculMoyenneDomaine(indexDomaine As Integer, indexTrimestre As Integer)
             If somme <> 0 Then
                 Cells(3 + indexEleve, 1 + 4 * (indexDomaine - 1) + indexTrimestre).Value = valeurToLettre(somme / diviseur)
             ElseIf somme = 0 And diviseur = 0 Then
-                Cells(3 + indexEleve, 1 + 4 * (indexDomaine - 1) + indexTrimestre).Value = vbNullString
+                Cells(3 + indexEleve, 1 + 4 * (indexDomaine - 1) + indexTrimestre).Value = ""
             End If
         Next indexEleve
     End If
@@ -237,7 +225,7 @@ Sub calculMoyenneTrimestre(indexTrimestre As Integer)
         If somme <> 0 Then
             Cells(3 + indexEleve, 1 + 4 * nombreDomaines + indexTrimestre).Value = Format(somme / diviseur, "Standard")
         ElseIf somme = 0 And diviseur = 0 Then
-            Cells(3 + indexEleve, 1 + 4 * nombreDomaines + indexTrimestre).Value = vbNullString
+            Cells(3 + indexEleve, 1 + 4 * nombreDomaines + indexTrimestre).Value = ""
         End If
     Next indexEleve
     
