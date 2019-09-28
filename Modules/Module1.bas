@@ -99,6 +99,8 @@ Sub creerClasses(nombreClasses)
     ligneClasse = 10
     colonneClasse = 6
     
+    Application.ScreenUpdating = False
+    
     ' Retrait protection
     Sheets(strPage1).Unprotect strPassword
     
@@ -122,10 +124,24 @@ Sub creerClasses(nombreClasses)
     Sheets(strPage1).EnableSelection = xlUnlockedCells
     Sheets(strPage1).Protect strPassword
     
+    Application.ScreenUpdating = True
+    
 End Sub
 
 Function getNombreClasses()
     getNombreClasses = Sheets(strPage1).Cells(10, 7).Value
+End Function
+
+Function getNomClasse(intIndiceClasse As Integer) As String
+    getNomClasse = Sheets(strPage1).Cells(12 + intIndiceClasse, 6).Value
+End Function
+
+Function getIndiceClasse(strNomClasse As String) As Integer
+    Dim intIndice As Integer
+    getIndiceClasse = 0
+    For intIndice = 1 To getNombreClasse
+        If strNomClasse = getNomClasse(intIndice) Then getIndiceClasse = intIndice
+    Next intIndice
 End Function
 
 Function getNombreEleves(Optional nomClasse As String)
@@ -215,3 +231,4 @@ Sub btnCreerListeEleve_Click()
     End If
     
 End Sub
+

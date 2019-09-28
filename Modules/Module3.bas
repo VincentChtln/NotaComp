@@ -5,6 +5,8 @@ Attribute VB_Name = "Module3"
 
 Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
 
+    Application.ScreenUpdating = True
+    
     ' Creation page
     ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
@@ -95,7 +97,9 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect strPassword:=strPassword
+    ActiveSheet.Protect strPassword
+    
+    Application.ScreenUpdating = True
     
 End Sub
 
@@ -112,6 +116,7 @@ Sub btnAjouterEvaluation_Click()
     colonneDepart = 3 + indexEval * (nombreCompetences + 1)
     
     ' Retrait protection feuille
+    Application.ScreenUpdating = False
     ActiveSheet.Unprotect strPassword
     
     ' Ajout de l'évaluation
@@ -119,7 +124,8 @@ Sub btnAjouterEvaluation_Click()
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
-    ActiveSheet.Protect strPassword:=strPassword
+    ActiveSheet.Protect strPassword
+    Application.ScreenUpdating = True
     
     MsgBox ("Évaluation ajoutée")
 
@@ -215,6 +221,7 @@ Sub btnCalculNote_Click()
     colonneDepart = 3 + (indexEval - 1) * (nombreCompetences + 1)
     
     ' Retrait protection feuille
+    Application.ScreenUpdating = False
     ActiveSheet.Unprotect strPassword
     
     ' Calcul note éval
@@ -223,6 +230,7 @@ Sub btnCalculNote_Click()
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
     ActiveSheet.Protect strPassword
+    Application.ScreenUpdating = True
     
 End Sub
 

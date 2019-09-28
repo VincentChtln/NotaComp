@@ -5,6 +5,8 @@ Attribute VB_Name = "Module4"
 
 Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
 
+    Application.ScreenUpdating = False
+    
     ' Creation page
     ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
@@ -113,6 +115,7 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
     ActiveSheet.Protect strPassword
+    Application.ScreenUpdating = True
     
 End Sub
 
@@ -124,6 +127,7 @@ Sub btnActualiserResultats_Click()
     nombreDomaines = getNombreDomaines
     
     ' Retrait protection page notes
+    Application.ScreenUpdating = False
     Sheets("Bilan (" & nomClasse & ")").Unprotect strPassword
     
     For indexTrimestre = 1 To 4
@@ -135,14 +139,16 @@ Sub btnActualiserResultats_Click()
     
     ' Protection page notres
     Sheets("Bilan (" & nomClasse & ")").Protect strPassword
+    Application.ScreenUpdating = True
     
-    MsgBox ("Données mises à jour")
+    MsgBox ("Données mises à jour.")
 End Sub
 
 ' Calcul de la moyenne trimestrielle/annuelle pour chaque domaine
 ' indexTrimestre = 4 pour indiquer l'année
 Sub calculMoyenneDomaine(indexDomaine As Integer, indexTrimestre As Integer)
     Dim nomClasse As String, lettre As String
+    Dim domaine As Integer
 
     ' Valeurs nécessaires
     nomClasse = Range("A3").Value

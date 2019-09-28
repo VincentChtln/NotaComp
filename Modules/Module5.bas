@@ -6,31 +6,6 @@ Attribute VB_Name = "Module5"
 Const strGitFolder As String = "C:\Users\Utilisateur\Documents\GitHub\OutilNotationCompetence\Modules\"
 Const strWBSource As String = "Outil de gestion des notes_Dev.xlsm"
 
-Function isFileOpen(strFilePath As String) As Boolean
-    Dim intFileNum As Integer, intErrNum As Integer
-
-    On Error Resume Next        ' Turn error checking off.
-    intFileNum = FreeFile()     ' Get a free file number.
-    ' Attempt to open the file and lock it.
-    Open strFilePath For Input Lock Read As #intFileNum
-    Close intFileNum            ' Close the file.
-    intErrNum = Err             ' Save the error number that occurred.
-    On Error GoTo 0             ' Turn error checking back on.
-
-    ' Check to see which error occurred.
-    Select Case intErrNum
-        ' No error occurred.
-        Case 0
-         isFileOpen = False
-        ' Error number for "Permission Denied."
-        Case 70
-            isFileOpen = True
-        ' Another error occurred.
-        Case Else
-            Error intErrNum
-    End Select
-End Function
-
 Function isWBOpen(strWBName As String) As Boolean
     Dim wb As Workbook
     isWBOpen = False
