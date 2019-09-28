@@ -29,7 +29,7 @@ Global Const intNombreMinCompetences As Integer = 1
 Global Const intNombreMaxCompetences As Integer = 8
 Global Const intNombreMinClasses As Integer = 1
 Global Const intNombreMaxClasses As Integer = 20
-Global Const intNombreMinEleves As Integer = 1
+Global Const intNombreMinEleves As Integer = 5
 Global Const intNombreMaxEleves As Integer = 40
 ' Lignes & colonnes de référence
 Const intLigDomaine As Integer = 10
@@ -75,28 +75,46 @@ Function getNomClasse(intIndiceClasse As Integer) As String
 End Function
 
 Function getIndiceClasse(strNomClasse As String) As Integer
-    Dim intIndice As Integer
+    Dim intIndice As Integer, intNombreClasses As Integer
     getIndiceClasse = 0
-    For intIndice = 1 To getNombreClasse
+    intNombreClasses = getNombreClasses
+    For intIndice = 1 To intNombreClasses
         If strNomClasse = getNomClasse(intIndice) Then getIndiceClasse = intIndice
     Next intIndice
 End Function
 
-Function getNombreEleves(Optional strNomClasse As String, Optional intIndiceClasse As Integer) As Integer
+Function getNombreEleves(Optional varClasse As Variant) As Integer
     Dim intNombreClasses As Integer
     intNombreClasses = getNombreClasses
-    If Not IsMissing(strNomClasse) Then
-        result = Application.VLookup(strNomClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
+    If IsMissing(varClasse) Then
+        getNombreEleves = Application.Sum(Range(Sheets(strPage1).Cells(13, intColClasse + 1), Cells(12 + intNombreClasses, intColClasse + 1)))
     Else
-        If Not IsMissing(intIndiceClasse) Then
-            result = Sheets(strPage1).Cells(12 + intIndiceClasse, intColClasse + 1)
-        Else
-            result = Application.Sum(Range(Sheets(strPage1).Cells(13, intColClasse + 1), Cells(12 + intNombreClasses, intColClasse + 1)))
-        End If
+        Select Case VarType(varClasse)
+        Case 2                                   ' Parameter is an Interger -> Class index
+            getNombreEleves = Sheets(strPage1).Cells(12 + varClasse, intColClasse + 1)
+        Case 7                                   ' Parameter is a String -> Class name
+            getNombreEleves = Application.VLookup(varClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
+        Case Else                                ' Parameter is another type
+            getNombreEleves = -1
+        End Select
     End If
-    getNombreEleves = result
-    
 End Function
+
+'
+'Function getNombreEleves(Optional strNomClasse As String, Optional intIndiceClasse As Integer) As Integer
+'    Dim intNombreClasses As Integer
+'    intNombreClasses = getNombreClasses
+'    getNombreEleves = -1
+'    If Not IsMissing(intIndiceClasse) Then
+'        getNombreEleves = Sheets(strPage1).Cells(12 + intIndiceClasse, intColClasse + 1)
+'    Else
+'        If Not IsMissing(strNomClasse) Then
+'            getNombreEleves = Application.VLookup(strNomClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
+'        Else
+'            getNombreEleves = Application.Sum(Range(Sheets(strPage1).Cells(13, intColClasse + 1), Cells(12 + intNombreClasses, intColClasse + 1)))
+'        End If
+'    End If
+'End Function
 
 ' **********************************
 ' PROCÉDURES
@@ -127,7 +145,8 @@ Sub btnCreerDomaines_Click()
     End If
 End Sub
 
-Sub creerDomaines(intNombreDomaines)
+Sub creerDomaines(intNombreDomaines As Integer)
+    Dim intIndiceDomaine As Integer
     
     ' Retrait protection
     Application.ScreenUpdating = False
@@ -141,9 +160,9 @@ Sub creerDomaines(intNombreDomaines)
         .Interior.ColorIndex = intColorDomaine
         .HorizontalAlignment = xlHAlignCenter
     End With
-    For Index = 1 To intNombreDomaines
-        Cells(intLigDomaine + 2 + Index, intColDomaine).Value = "Domaine " & Index
-    Next Index
+    For intIndiceDomaine = 1 To intNombreDomaines
+        Cells(intLigDomaine + 2 + intIndiceDomaine, intColDomaine).Value = "Domaine " & intIndiceDomaine
+    Next intIndiceDomaine
     With Range(Cells(intLigDomaine + 2, intColDomaine), Cells(intLigDomaine + 2 + intNombreDomaines, intColDomaine + 1))
         .Borders.ColorIndex = xlColorIndexAutomatic
         .HorizontalAlignment = xlHAlignCenter
@@ -184,7 +203,7 @@ Sub btnCreerClasses_Click()
 
 End Sub
 
-Sub creerClasses(intNombreClasses)
+Sub creerClasses(intNombreClasses As Integer)
     
     ' Retrait protection
     Application.ScreenUpdating = False
@@ -214,25 +233,28 @@ Sub creerClasses(intNombreClasses)
 End Sub
 
 Sub creerBtnListeEleve()
-    Dim buttonCell As Range
-    Dim indexButton As Integer
+    Dim rngBouton As Range
+    Dim intIndiceBouton As Integer
+    Dim btnCreerListeEleve As Variant
     
     ' Retrait protection
     Application.ScreenUpdating = False
     Sheets(strPage1).Unprotect strPassword
     
     ' Ajout bouton
-    Set buttonCell = Range("J10:J11")
+    Set rngBouton = Range("J10:J11")
     If Sheets(strPage1).Buttons.Count > 2 Then
-        For indexButton = 3 To Sheets(strPage1).Buttons.Count
-            Sheets(strPage1).Buttons(indexButton).Delete
-        Next indexButton
+        For intIndiceBouton = 3 To Sheets(strPage1).Buttons.Count
+            Sheets(strPage1).Buttons(intIndiceBouton).Delete
+        Next intIndiceBouton
     End If
-    Set Button = Sheets(strPage1).Buttons.Add(buttonCell.Left, buttonCell.Top, buttonCell.Width, buttonCell.Height)
-    With Button
+    Set btnCreerListeEleve = Sheets(strPage1).Buttons.Add(rngBouton.Left, rngBouton.Top, rngBouton.Width, rngBouton.Height)
+    With btnCreerListeEleve
         .Caption = "Valider les données & créer les listes"
         .OnAction = "btnCreerListeEleve_Click"
     End With
+    Set rngBouton = Nothing
+    Set btnCreerListeEleve = Nothing
 
     ' Protection
     Sheets(strPage1).EnableSelection = xlUnlockedCells
@@ -269,7 +291,7 @@ Sub btnCreerListeEleve_Click()
     
     ' Test des classes/élèves
     For intIndiceClasse = 1 To intNombreClasses
-        intNombreEleves = getNombreEleves(, intIndiceClasse)
+        intNombreEleves = getNombreEleves(intIndiceClasse)
         If Not IsEmpty(intNombreEleves) And IsNumeric(intNombreEleves) Then
             If intNombreEleves > intNombreMaxEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMaxEleves
             ElseIf intNombreEleves < intNombreMinEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMinEleves
@@ -283,6 +305,7 @@ Sub btnCreerListeEleve_Click()
     
     ' Confirmation
     If MsgBox("Êtes-vous sûr(e) de valider ces données ? Il ne sera pas possible de les modifier par la suite.", vbYesNo) = vbYes Then
+        
         ' Verrouillage toutes cellules + protection feuille
         Application.ScreenUpdating = False
         Sheets(strPage1).Unprotect strPassword
