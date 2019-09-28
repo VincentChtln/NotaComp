@@ -242,3 +242,4 @@ Sub calculMoyenneTrimestre(indexTrimestre As Integer)
     Next indexEleve
     
 End Sub
+

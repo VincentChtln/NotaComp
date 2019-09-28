@@ -24,16 +24,16 @@ End Function
 Function valeurToLettre(intValeur As Integer) As String
     If intValeur >= 0 And intValeur <= 4 Then
         Select Case intValeur
-            Case Is > 3.3
-                valeurToLettre = "A"
-            Case Is > 2.3
-                valeurToLettre = "B"
-            Case Is > 1
-                valeurToLettre = "C"
-            Case Is > 0
-                valeurToLettre = "D"
-            Case Else
-                valeurToLettre = "E"
+        Case Is > 3.3
+            valeurToLettre = "A"
+        Case Is > 2.3
+            valeurToLettre = "B"
+        Case Is > 1
+            valeurToLettre = "C"
+        Case Is > 0
+            valeurToLettre = "D"
+        Case Else
+            valeurToLettre = "E"
         End Select
     Else
         valeurToLettre = "Z"
@@ -172,7 +172,7 @@ Sub btnAjouterEvaluation_Click()
     MsgBox ("Évaluation ajoutée")
 
 End Sub
-    
+
 Sub ajouterEvaluation(colonneDepart As Integer)
     Dim nombreEleves As Integer, nombreDomaines As Integer, totalCompetences As Integer
     Dim indexDomaine As Integer, indexCompetences As Integer
@@ -302,3 +302,4 @@ Sub calculNote(colonneDepart As Integer)
         End If
     Next indexEleve
 End Sub
+

@@ -279,6 +279,7 @@ Sub btnCreerListeEleve_Click()
         If Not IsEmpty(intNombreCompetences) And IsNumeric(intNombreCompetences) Then
             If intNombreCompetences > intNombreMaxCompetences Then Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMaxCompetences
             ElseIf intNombreCompetences < intNombreMinCompetences Then Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMinCompetences
+            End If
             intCompteur = intCompteur + 1
         End If
     Next intIndiceDomaine
@@ -295,6 +296,7 @@ Sub btnCreerListeEleve_Click()
         If Not IsEmpty(intNombreEleves) And IsNumeric(intNombreEleves) Then
             If intNombreEleves > intNombreMaxEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMaxEleves
             ElseIf intNombreEleves < intNombreMinEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMinEleves
+            End If
             intCompteur = intCompteur + 1
         End If
     Next intIndiceClasse

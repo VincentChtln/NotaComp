@@ -398,6 +398,3 @@ Sub supprimerEleve(intIndiceClasse As Integer, strNomComplet As String)
     Application.ScreenUpdating = True
 End Sub
 
-
-
-
