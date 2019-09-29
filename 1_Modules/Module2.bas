@@ -140,6 +140,9 @@ End Sub
 ' *** Action: crée la feuille de listes de classes et tous les tableaux 'Classes' et 'Eval'
 Sub btnCreerTableaux_Click()
     Dim intNombreClasses As Integer, intIndiceClasse As Integer
+    Dim intNombreEleves As Integer
+    
+    intNombreClasses = getNombreClasses
     
     ' Confirmation
     If MsgBox("Êtes-vous sûr(e) de valider ces listes ? Vous pourrez toujours ajouter des élèves mais il sera impossible de recréer les tableaux.", vbYesNo) = vbYes Then
@@ -147,10 +150,10 @@ Sub btnCreerTableaux_Click()
         Application.ScreenUpdating = False
     
         ' Creation des pages 'Notes' et 'Bilan'
-        intNombreClasses = getNombreClasses
         For intIndiceClasse = 1 To intNombreClasses
-            creerTableauNotes Sheets(strPage1).Cells(12 + intIndiceClasse, 6).Value, intIndiceClasse, Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value
-            creerTableauBilan Sheets(strPage1).Cells(12 + intIndiceClasse, 6).Value, intIndiceClasse, Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value
+            intNombreEleves = getNombreEleves(intIndiceClasse)
+            creerTableauNotes intIndiceClasse, intNombreEleves
+            creerTableauBilan intIndiceClasse, intNombreEleves
         Next intIndiceClasse
         
         ' Verouillage des listes

@@ -15,14 +15,22 @@ Option Explicit
 ' PROCÉDURES
 ' **********************************
 
-Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
+Sub creerTableauBilan(intIndiceClasse As Integer, intNombreEleves As Integer)
+    Dim intIndiceLigne As Integer
+    Dim rngCelluleBouton As Range, btnBouton As Variant
+    Dim strNomClasse As String
+    Dim intIndiceEleve As Integer
+    Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
+
+    ' Données nécessaires
+    strNomClasse = getNomClasse(intIndiceClasse)
 
     Application.ScreenUpdating = False
     
     ' Creation page
     ActiveWorkbook.Unprotect strPassword
     Sheets.Add After:=Sheets(Sheets.Count)
-    Sheets(Sheets.Count).Name = "Bilan (" & nomClasse & ")"
+    Sheets(Sheets.Count).Name = "Bilan (" & strNomClasse & ")"
     ActiveWorkbook.Protect strPassword, True, True
     With Cells
         .Borders.ColorIndex = 2
@@ -40,27 +48,27 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     
     '**** COLONNE INFOS + LISTE ELEVE ****
     ' Taille ligne/colonne
-    For ligne = 1 To nombreEleves + 3
-        If ligne < 4 Then
-            Rows(ligne).RowHeight = 25
+    For intIndiceLigne = 1 To intNombreEleves + 3
+        If intIndiceLigne < 4 Then
+            Rows(intIndiceLigne).RowHeight = 25
         Else
-            Rows(ligne).RowHeight = 15
+            Rows(intIndiceLigne).RowHeight = 15
         End If
-    Next ligne
+    Next intIndiceLigne
     Columns.ColumnWidth = 6
     Columns(1).ColumnWidth = 40
     
     ' Bouton 'actualiser résultats'
-    Set buttonCell = Range("A1")
-    Set Button = ActiveSheet.Buttons.Add(buttonCell.Left, buttonCell.Top, buttonCell.Width, buttonCell.Height)
-    With Button
+    Set rngCelluleBouton = Range("A1")
+    Set btnBouton = ActiveSheet.Buttons.Add(rngCelluleBouton.Left, rngCelluleBouton.Top, rngCelluleBouton.Width, rngCelluleBouton.Height)
+    With btnBouton
         .Caption = "Actualiser résultats"
         .OnAction = "btnActualiserResultats_Click"
     End With
     
     ' Légende
     With Range("A3")
-        .Value = nomClasse
+        .Value = strNomClasse
         .Interior.ColorIndex = intColorClasse
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
@@ -68,12 +76,12 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     End With
     
     ' Liste élève
-    For indexEleve = 1 To nombreEleves
-        With Cells(3 + indexEleve, 1)
-            .Value = Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
+    For intIndiceEleve = 1 To intNombreEleves
+        With Cells(3 + intIndiceEleve, 1)
+            .Value = Sheets(strPage2).Cells(3 + intIndiceEleve, intIndiceClasse * 2 - 1).Value
         End With
-    Next indexEleve
-    With Range(Cells(4, 1), Cells(3 + nombreEleves, 1))
+    Next intIndiceEleve
+    With Range(Cells(4, 1), Cells(3 + intNombreEleves, 1))
         .HorizontalAlignment = xlHAlignLeft
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
@@ -81,34 +89,34 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
     End With
     
     '**** LIGNE EN-TETE + CONTENU ****
-    nombreDomaines = getNombreDomaines
-    With Range(Cells(1, 2), Cells(1, 1 + 4 * (nombreDomaines + 1)))
+    intNombreDomaines = getNombreDomaines
+    With Range(Cells(1, 2), Cells(1, 1 + 4 * (intNombreDomaines + 1)))
         .Interior.ColorIndex = intColorBilan
         .MergeCells = True
         .Value = "Bilan trimestriel & annuel"
     End With
-    For indexDomaine = 1 To nombreDomaines + 1
-        If indexDomaine <= nombreDomaines Then
-            With Range(Cells(2, 2 + 4 * (indexDomaine - 1)), Cells(2, 5 + 4 * (indexDomaine - 1)))
+    For intIndiceDomaine = 1 To intNombreDomaines + 1
+        If intIndiceDomaine <= intNombreDomaines Then
+            With Range(Cells(2, 2 + 4 * (intIndiceDomaine - 1)), Cells(2, 5 + 4 * (intIndiceDomaine - 1)))
                 .Interior.ColorIndex = intColorDomaine
                 .MergeCells = True
-                .Value = "D" & indexDomaine
+                .Value = "D" & intIndiceDomaine
             End With
-            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = intColorDomaine2
+            Range(Cells(3, 5 + 4 * (intIndiceDomaine - 1)), Cells(3 + intNombreEleves, 5 + 4 * (intIndiceDomaine - 1))).Interior.ColorIndex = intColorDomaine2
             
         Else
-            With Range(Cells(2, 2 + 4 * (indexDomaine - 1)), Cells(2, 5 + 4 * (indexDomaine - 1)))
+            With Range(Cells(2, 2 + 4 * (intIndiceDomaine - 1)), Cells(2, 5 + 4 * (intIndiceDomaine - 1)))
                 .Interior.ColorIndex = intColorNote
                 .MergeCells = True
                 .Value = "Note globale"
             End With
-            Range(Cells(3, 5 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1))).Interior.ColorIndex = intColorNote2
+            Range(Cells(3, 5 + 4 * (intIndiceDomaine - 1)), Cells(3 + intNombreEleves, 5 + 4 * (intIndiceDomaine - 1))).Interior.ColorIndex = intColorNote2
         End If
-        Cells(3, 2 + 4 * (indexDomaine - 1)).Value = "1e tri"
-        Cells(3, 3 + 4 * (indexDomaine - 1)).Value = "2e tri"
-        Cells(3, 4 + 4 * (indexDomaine - 1)).Value = "3e tri"
-        Cells(3, 5 + 4 * (indexDomaine - 1)).Value = "Année"
-        With Range(Cells(2, 2 + 4 * (indexDomaine - 1)), Cells(3 + nombreEleves, 5 + 4 * (indexDomaine - 1)))
+        Cells(3, 2 + 4 * (intIndiceDomaine - 1)).Value = "1e tri"
+        Cells(3, 3 + 4 * (intIndiceDomaine - 1)).Value = "2e tri"
+        Cells(3, 4 + 4 * (intIndiceDomaine - 1)).Value = "3e tri"
+        Cells(3, 5 + 4 * (intIndiceDomaine - 1)).Value = "Année"
+        With Range(Cells(2, 2 + 4 * (intIndiceDomaine - 1)), Cells(3 + intNombreEleves, 5 + 4 * (intIndiceDomaine - 1)))
             .Borders.ColorIndex = xlColorIndexAutomatic
             .Borders.LineStyle = xlContinuous
             .Borders(xlEdgeBottom).Weight = xlMedium
@@ -118,11 +126,11 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
             .Borders(xlInsideHorizontal).Weight = xlThin
             .Borders(xlInsideVertical).Weight = xlHairline
         End With
-    Next indexDomaine
-    Range(Cells(1, 2), Cells(3 + nombreEleves, 1 + 4 * (nombreDomaines + 1))).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
-    Range(Cells(4, 1), Cells(3 + nombreEleves, 1 + 4 * (nombreDomaines + 1))).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
+    Next intIndiceDomaine
+    Range(Cells(1, 2), Cells(3 + intNombreEleves, 1 + 4 * (intNombreDomaines + 1))).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
+    Range(Cells(4, 1), Cells(3 + intNombreEleves, 1 + 4 * (intNombreDomaines + 1))).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
     
-    Range(Cells(4, 2), Cells(3 + nombreEleves, 1 + 4 * (nombreDomaines + 1))).Cells.Locked = False
+    Range(Cells(4, 2), Cells(3 + intNombreEleves, 1 + 4 * (intNombreDomaines + 1))).Cells.Locked = False
     
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
@@ -132,114 +140,127 @@ Sub creerTableauBilan(nomClasse As String, indexClasse As Integer, nombreEleves 
 End Sub
 
 Sub btnActualiserResultats_Click()
-    Dim indexDomaine As Integer, indexTrimestre As Integer
+    Dim strNomClasse As String
+    Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
+    Dim intIndiceTrimestre As Integer
 
     ' Valeurs nécessaires
-    nomClasse = Range("A3").Value
-    nombreDomaines = getNombreDomaines
+    strNomClasse = Range("A3").Value
+    intNombreDomaines = getNombreDomaines
     
     ' Retrait protection page notes
     Application.ScreenUpdating = False
-    Sheets("Bilan (" & nomClasse & ")").Unprotect strPassword
+    Sheets("Bilan (" & strNomClasse & ")").Unprotect strPassword
     
-    For indexTrimestre = 1 To 4
-        For indexDomaine = 1 To nombreDomaines
-            calculMoyenneDomaine indexDomaine, indexTrimestre
-        Next indexDomaine
-        calculMoyenneTrimestre indexTrimestre
-    Next indexTrimestre
+    For intIndiceTrimestre = 1 To 4
+        For intIndiceDomaine = 1 To intNombreDomaines
+            calculMoyenneDomaine intIndiceDomaine, intIndiceTrimestre
+        Next intIndiceDomaine
+        calculMoyenneTrimestre intIndiceTrimestre
+    Next intIndiceTrimestre
     
     ' Protection page notres
-    Sheets("Bilan (" & nomClasse & ")").Protect strPassword
+    Sheets("Bilan (" & strNomClasse & ")").Protect strPassword
     Application.ScreenUpdating = True
     
     MsgBox ("Données mises à jour.")
 End Sub
 
 ' Calcul de la moyenne trimestrielle/annuelle pour chaque domaine
-' indexTrimestre = 4 pour indiquer l'année
-Sub calculMoyenneDomaine(indexDomaine As Integer, indexTrimestre As Integer)
-    Dim nomClasse As String, lettre As String
-    Dim domaine As Integer
+' intIndiceTrimestre = 4 pour indiquer l'année
+Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Integer)
+    Dim strNomClasse As String
+    Dim intNombreEleves As Integer, intIndiceEleve As Integer
+    Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
+    Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer, intNumeroTotalCompetences As Integer
+    Dim intNombreCompetences As Integer, intIndiceCompetence As Integer
+    Dim intNombreEvals As Integer, intIndiceEval As Integer
+    Dim strLettre As String
+    Dim intSomme As Integer, intDiviseur As Integer, intCoeffCompetence As Integer
 
     ' Valeurs nécessaires
-    nomClasse = Range("A3").Value
-    nombreEvals = Sheets("Notes (" & nomClasse & ")").Buttons.Count - 1
-    nombreCompetences = getNombreCompetences(indexDomaine)
-    nombreTotalCompetences = getNombreCompetences
-    nombreEleves = getNombreEleves(nomClasse)
-    nombreDomaines = getNombreDomaines
-    moitieCompetences = (nombreTotalCompetences - nombreTotalCompetences Mod 2) / 2
-    indexReference = 1
+    strNomClasse = Range("A3").Value
+    intNombreEvals = Sheets("Notes (" & strNomClasse & ")").Buttons.Count - 1
+    intNombreCompetences = getNombreCompetences(intNumeroDomaine)
+    intTotalCompetences = getNombreCompetences
+    intNombreEleves = getNombreEleves(strNomClasse)
+    intNombreDomaines = getNombreDomaines
+    intMoitieTotalCompetences = (intTotalCompetences - intTotalCompetences Mod 2) / 2
+    intNumeroTotalCompetences = 1
     
     ' Vérfication des entrées
-    If indexDomaine <= nombreDomaines And (indexTrimestre > 0 Or indexTrimestre < 5) Then
+    If intNumeroDomaine <= intNombreDomaines And (intIndiceTrimestre >= 1 And intIndiceTrimestre <= 4) Then
         
-        ' Calcul indexReference = colonne du domaine concerné
-        For domaine = 1 To indexDomaine
-            If domaine <> indexDomaine Then
-                indexReference = indexReference + getNombreCompetences(domaine)
+        ' Calcul intNumeroTotalCompetences = intIndiceColonneDepart du domaine concerné
+        For intIndiceDomaine = 1 To intNumeroDomaine
+            If intIndiceDomaine <> intNumeroDomaine Then
+                intNumeroTotalCompetences = intNumeroTotalCompetences + getNombreCompetences(intIndiceDomaine)
             End If
-        Next domaine
+        Next intIndiceDomaine
         
         ' Calcul de la moyenne
-        For indexEleve = 1 To nombreEleves
-            somme = 0
-            diviseur = 0
-            For indexEval = 1 To nombreEvals
-                If indexTrimestre = 4 Or Sheets("Notes (" & nomClasse & ")").Cells(2, 3 + (indexEval - 1) * (nombreTotalCompetences + 1)).Value = indexTrimestre Then
-                    For indexCompetence = indexReference To indexReference + nombreCompetences - 1
-                        lettre = Sheets("Notes (" & nomClasse & ")").Cells(5 + indexEleve, 2 + (indexEval - 1) * (nombreTotalCompetences + 1) + indexCompetence).Value
-                        coeffCompetence = Sheets("Notes (" & nomClasse & ")").Cells(5, 2 + (indexEval - 1) * (nombreTotalCompetences + 1) + indexCompetence).Value
-                        If StrComp(lettre, vbNullString) <> 0 And IsEmpty(coeffCompetence) = False Then
-                            somme = somme + coeffCompetence * lettreToValeur(lettre)
-                            diviseur = diviseur + coeffCompetence
+        For intIndiceEleve = 1 To intNombreEleves
+            intSomme = 0
+            intDiviseur = 0
+            For intIndiceEval = 1 To intNombreEvals
+                If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
+                    For intIndiceCompetence = intNumeroTotalCompetences To intNumeroTotalCompetences + intNombreCompetences - 1
+                        strLettre = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
+                        intCoeffCompetence = Sheets("Notes (" & strNomClasse & ")").Cells(5, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
+                        If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(intCoeffCompetence) = False Then
+                            intSomme = intSomme + intCoeffCompetence * lettreToValeur(strLettre)
+                            intDiviseur = intDiviseur + intCoeffCompetence
                         End If
-                    Next indexCompetence
+                    Next intIndiceCompetence
                 End If
-            Next indexEval
-            If somme <> 0 Then
-                Cells(3 + indexEleve, 1 + 4 * (indexDomaine - 1) + indexTrimestre).Value = valeurToLettre(somme / diviseur)
-            ElseIf somme = 0 And diviseur = 0 Then
-                Cells(3 + indexEleve, 1 + 4 * (indexDomaine - 1) + indexTrimestre).Value = vbNullString
+            Next intIndiceEval
+            If intSomme <> 0 Then
+                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = valeurToLettre(intSomme / intDiviseur)
+            ElseIf intSomme = 0 And intDiviseur = 0 Then
+                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = vbNullString
             End If
-        Next indexEleve
+        Next intIndiceEleve
     End If
     
 End Sub
 
 ' Calcul la moyenne des notes du trimestre
-Sub calculMoyenneTrimestre(indexTrimestre As Integer)
-    Dim nomClasse As String
+Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
+    Dim strNomClasse As String
+    Dim intNombreEleves As Integer, intIndiceEleve As Integer
+    Dim intNombreDomaines As Integer
+    Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer
+    Dim intNombreEvals As Integer, intIndiceEval
+    Dim intNote As Integer, intSomme As Integer, intDiviseur As Integer, intCoeffEval As Integer
 
     ' Valeurs nécessaires
-    nomClasse = Range("A3").Value
-    nombreEvals = Sheets("Notes (" & nomClasse & ")").Buttons.Count - 1
-    nombreTotalCompetences = getNombreCompetences
-    nombreEleves = getNombreEleves(nomClasse)
-    nombreDomaines = getNombreDomaines
-    moitieCompetences = (nombreTotalCompetences - nombreTotalCompetences Mod 2) / 2
+    strNomClasse = Range("A3").Value
+    intNombreEvals = Sheets("Notes (" & strNomClasse & ")").Buttons.Count - 1
+    intTotalCompetences = getNombreCompetences
+    intNombreEleves = getNombreEleves(strNomClasse)
+    intNombreDomaines = getNombreDomaines
+    intMoitieTotalCompetences = (intTotalCompetences - intTotalCompetences Mod 2) / 2
     
     ' Calcul de la moyenne
-    For indexEleve = 1 To nombreEleves
-        somme = 0
-        diviseur = 0
-        For indexEval = 1 To nombreEvals
-            If indexTrimestre = 4 Or Sheets("Notes (" & nomClasse & ")").Cells(2, 3 + (indexEval - 1) * (nombreTotalCompetences + 1)).Value = indexTrimestre Then
-                note = Sheets("Notes (" & nomClasse & ")").Cells(5 + indexEleve, 2 + (indexEval) * (nombreTotalCompetences + 1)).Value
-                If IsEmpty(note) = False Then
-                    coeffEval = Sheets("Notes (" & nomClasse & ")").Cells(2, 3 + moitieCompetences + (indexEval - 1) * (nombreTotalCompetences + 1)).Value
-                    somme = somme + coeffEval * note
-                    diviseur = diviseur + coeffEval
+    For intIndiceEleve = 1 To intNombreEleves
+        intSomme = 0
+        intDiviseur = 0
+        For intIndiceEval = 1 To intNombreEvals
+            If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
+                intNote = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
+                If IsEmpty(intNote) = False Then
+                    intCoeffEval = Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
+                    intSomme = intSomme + intCoeffEval * intNote
+                    intDiviseur = intDiviseur + intCoeffEval
                 End If
             End If
-        Next indexEval
-        If somme <> 0 Then
-            Cells(3 + indexEleve, 1 + 4 * nombreDomaines + indexTrimestre).Value = Format(somme / diviseur, "Standard")
-        ElseIf somme = 0 And diviseur = 0 Then
-            Cells(3 + indexEleve, 1 + 4 * nombreDomaines + indexTrimestre).Value = vbNullString
+        Next intIndiceEval
+        If intSomme <> 0 Then
+            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = Format(intSomme / intDiviseur, "Standard")
+        ElseIf intSomme = 0 And intDiviseur = 0 Then
+            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = vbNullString
         End If
-    Next indexEleve
+    Next intIndiceEleve
     
 End Sub
 

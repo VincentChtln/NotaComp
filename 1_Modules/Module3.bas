@@ -44,15 +44,21 @@ End Function
 ' PROCÉDURES
 ' **********************************
 
-Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves As Integer)
-
+Sub creerTableauNotes(intIndiceClasse As Integer, intNombreEleves As Integer)
+    Dim intIndiceLigne As Integer, intIndiceColonne As Integer, intIndiceColonneDepart As Integer
+    Dim rngCelluleBouton As Range, btnBouton As Variant
+    Dim intIndiceEleve As Integer
+    Dim strNomClasse As String
+    
+    strNomClasse = getNomClasse(intIndiceClasse)
+    
     ' Deverouillage
     Application.ScreenUpdating = True
     ActiveWorkbook.Unprotect strPassword
     
     ' Creation page
     Sheets.Add After:=Sheets(Sheets.Count)
-    Sheets(Sheets.Count).Name = "Notes (" & nomClasse & ")"
+    Sheets(Sheets.Count).Name = "Notes (" & strNomClasse & ")"
     ActiveWorkbook.Protect strPassword, True, True
     With Cells
         .Borders.ColorIndex = 2
@@ -63,30 +69,30 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     
     '**** COLONNE INFOS + LISTE ELEVE ****
     ' Taille ligne/colonne
-    For ligne = 1 To nombreEleves + 5
-        If ligne < 4 Then
-            Rows(ligne).RowHeight = 20
-        ElseIf ligne = 4 Or ligne = 5 Then
-            Rows(ligne).RowHeight = 30
+    For intIndiceLigne = 1 To intNombreEleves + 5
+        If intIndiceLigne < 4 Then
+            Rows(intIndiceLigne).RowHeight = 20
+        ElseIf intIndiceLigne = 4 Or intIndiceLigne = 5 Then
+            Rows(intIndiceLigne).RowHeight = 30
         Else
-            Rows(ligne).RowHeight = 15
+            Rows(intIndiceLigne).RowHeight = 15
         End If
-    Next ligne
-    For colonne = 1 To 2
-        Columns(colonne).ColumnWidth = 25
-    Next colonne
+    Next intIndiceLigne
+    For intIndiceColonne = 1 To 2
+        Columns(intIndiceColonne).ColumnWidth = 25
+    Next intIndiceColonne
     
     ' Bouton 'ajouter éval'
-    Set buttonCell = Range("A1")
-    Set Button = ActiveSheet.Buttons.Add(buttonCell.Left, buttonCell.Top, buttonCell.Width, buttonCell.Height)
-    With Button
+    Set rngCelluleBouton = Range("A1")
+    Set btnBouton = ActiveSheet.Buttons.Add(rngCelluleBouton.Left, rngCelluleBouton.Top, rngCelluleBouton.Width, rngCelluleBouton.Height)
+    With btnBouton
         .Caption = "Ajouter évaluation"
         .OnAction = "btnAjouterEvaluation_Click"
     End With
     
     ' Légende
     With Range("A5")
-        .Value = nomClasse
+        .Value = strNomClasse
         .Interior.ColorIndex = intColorClasse
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
@@ -111,13 +117,13 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     Range("B4").Interior.ColorIndex = intColorDomaine2
     
     ' Liste élève
-    For indexEleve = 1 To nombreEleves
-        With Cells(5 + indexEleve, 1)
-            .Value = Sheets(strPage2).Cells(3 + indexEleve, indexClasse * 2 - 1).Value
+    For intIndiceEleve = 1 To intNombreEleves
+        With Cells(5 + intIndiceEleve, 1)
+            .Value = Sheets(strPage2).Cells(3 + intIndiceEleve, intIndiceClasse * 2 - 1).Value
         End With
-        Range(Cells(5 + indexEleve, 1), Cells(5 + indexEleve, 2)).MergeCells = True
-    Next indexEleve
-    With Range(Cells(6, 1), Cells(5 + nombreEleves, 2))
+        Range(Cells(5 + intIndiceEleve, 1), Cells(5 + intIndiceEleve, 2)).MergeCells = True
+    Next intIndiceEleve
+    With Range(Cells(6, 1), Cells(5 + intNombreEleves, 2))
         .HorizontalAlignment = xlHAlignLeft
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
@@ -132,9 +138,9 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
     End With
     
     '**** 1e EVALUATION ****
-    colonneDepart = 3
+    intIndiceColonneDepart = 3
     
-    ajouterEvaluation (colonneDepart)
+    ajouterEvaluation (intIndiceColonneDepart)
     
     
     ' Verouillage
@@ -146,23 +152,26 @@ Sub creerTableauNotes(nomClasse As String, indexClasse As Integer, nombreEleves 
 End Sub
 
 Sub btnAjouterEvaluation_Click()
-
-    Dim nombreEleves As Integer, nombreDomaines As Integer, nombreCompetences As Integer, colonneDepart As Integer, indexEval As Integer, indexDomaine As Integer
-    Dim totalCompetences As Integer
-    nombreDomaines = getNombreDomaines
-    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+    Dim intNombreEleves As Integer
+    Dim intNombreDomaines As Integer
+    Dim intNombreCompetences As Integer
+    Dim intIndiceColonneDepart As Integer
+    Dim intIndiceEval As Integer
+    
+    intNombreDomaines = getNombreDomaines
+    intNombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
         
     ' Determine la colonne où ajouter l'éval
-    indexEval = ActiveSheet.Buttons.Count - 1
-    nombreCompetences = getNombreCompetences
-    colonneDepart = 3 + indexEval * (nombreCompetences + 1)
+    intIndiceEval = ActiveSheet.Buttons.Count - 1
+    intNombreCompetences = getNombreCompetences
+    intIndiceColonneDepart = 3 + intIndiceEval * (intNombreCompetences + 1)
     
     ' Retrait protection feuille
     Application.ScreenUpdating = False
     ActiveSheet.Unprotect strPassword
     
     ' Ajout de l'évaluation
-    ajouterEvaluation (colonneDepart)
+    ajouterEvaluation (intIndiceColonneDepart)
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
@@ -173,31 +182,33 @@ Sub btnAjouterEvaluation_Click()
 
 End Sub
 
-Sub ajouterEvaluation(colonneDepart As Integer)
-    Dim nombreEleves As Integer, nombreDomaines As Integer, totalCompetences As Integer
-    Dim indexDomaine As Integer, indexCompetences As Integer
+Sub ajouterEvaluation(intIndiceColonneDepart As Integer)
+    Dim intNombreEleves As Integer
+    Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
+    Dim intTotalCompetences As Integer, intMoitieTotalCompetences, intIndiceCompetence As Integer, intNombreCompetences
+    Dim rngCelluleBouton As Range, btnBouton As Variant
     
     ' Calcul données nécessaires
-    nombreDomaines = getNombreDomaines
-    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+    intNombreDomaines = getNombreDomaines
+    intNombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
     
     ' Domaines/Compétences
-    totalCompetences = 0
-    For indexDomaine = 1 To nombreDomaines
-        intNombreCompetences = getNombreCompetences(indexDomaine)
-        For indexCompetence = 1 To intNombreCompetences
-            totalCompetences = totalCompetences + 1
-            Columns(colonneDepart + totalCompetences - 1).ColumnWidth = 3
-            With Cells(4, colonneDepart + totalCompetences - 1)
-                .Value = "D" & indexDomaine & "/" & indexCompetence
+    intTotalCompetences = 0
+    For intIndiceDomaine = 1 To intNombreDomaines
+        intNombreCompetences = getNombreCompetences(intIndiceDomaine)
+        For intIndiceCompetence = 1 To intNombreCompetences
+            intTotalCompetences = intTotalCompetences + 1
+            Columns(intIndiceColonneDepart + intTotalCompetences - 1).ColumnWidth = 3
+            With Cells(4, intIndiceColonneDepart + intTotalCompetences - 1)
+                .Value = "D" & intIndiceDomaine & "/" & intIndiceCompetence
                 .Orientation = xlUpward
                 .Interior.ColorIndex = intColorDomaine2
             End With
-        Next indexCompetence
-        Cells(3, colonneDepart + totalCompetences - indexCompetence + 1).Value = "D" & indexDomaine
-        Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(3, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = intColorDomaine
-        Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(3, colonneDepart + totalCompetences - 1)).MergeCells = True
-        With Range(Cells(3, colonneDepart + totalCompetences - indexCompetence + 1), Cells(5 + nombreEleves, colonneDepart + totalCompetences - 1))
+        Next intIndiceCompetence
+        Cells(3, intIndiceColonneDepart + intTotalCompetences - intIndiceCompetence + 1).Value = "D" & intIndiceDomaine
+        Range(Cells(3, intIndiceColonneDepart + intTotalCompetences - intIndiceCompetence + 1), Cells(3, intIndiceColonneDepart + intTotalCompetences - 1)).Interior.ColorIndex = intColorDomaine
+        Range(Cells(3, intIndiceColonneDepart + intTotalCompetences - intIndiceCompetence + 1), Cells(3, intIndiceColonneDepart + intTotalCompetences - 1)).MergeCells = True
+        With Range(Cells(3, intIndiceColonneDepart + intTotalCompetences - intIndiceCompetence + 1), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences - 1))
             .Borders.ColorIndex = xlColorIndexAutomatic
             .Borders.LineStyle = xlContinuous
             .Borders(xlEdgeBottom).Weight = xlMedium
@@ -207,29 +218,29 @@ Sub ajouterEvaluation(colonneDepart As Integer)
             .Borders(xlInsideHorizontal).Weight = xlThin
             .Borders(xlInsideVertical).Weight = xlHairline
         End With
-    Next indexDomaine
+    Next intIndiceDomaine
     
     ' Infos Eval
-    moitieCompetences = (totalCompetences - totalCompetences Mod 2) / 2
-    Range(Cells(1, colonneDepart), Cells(1, colonneDepart + totalCompetences - 1)).Interior.ColorIndex = intColorEval
-    Range(Cells(1, colonneDepart), Cells(1, colonneDepart + totalCompetences - 1)).MergeCells = True
-    Range(Cells(2, colonneDepart), Cells(2, colonneDepart + moitieCompetences - 1)).MergeCells = True
-    Range(Cells(2, colonneDepart + moitieCompetences), Cells(2, colonneDepart + totalCompetences - 1)).MergeCells = True
-    Set buttonCell = Range(Cells(1, colonneDepart + totalCompetences), Cells(2, colonneDepart + totalCompetences))
-    Set Button = ActiveSheet.Buttons.Add(buttonCell.Left, buttonCell.Top, buttonCell.Width, buttonCell.Height)
-    With Button
+    intMoitieTotalCompetences = (intTotalCompetences - intTotalCompetences Mod 2) / 2
+    Range(Cells(1, intIndiceColonneDepart), Cells(1, intIndiceColonneDepart + intTotalCompetences - 1)).Interior.ColorIndex = intColorEval
+    Range(Cells(1, intIndiceColonneDepart), Cells(1, intIndiceColonneDepart + intTotalCompetences - 1)).MergeCells = True
+    Range(Cells(2, intIndiceColonneDepart), Cells(2, intIndiceColonneDepart + intMoitieTotalCompetences - 1)).MergeCells = True
+    Range(Cells(2, intIndiceColonneDepart + intMoitieTotalCompetences), Cells(2, intIndiceColonneDepart + intTotalCompetences - 1)).MergeCells = True
+    Set rngCelluleBouton = Range(Cells(1, intIndiceColonneDepart + intTotalCompetences), Cells(2, intIndiceColonneDepart + intTotalCompetences))
+    Set btnBouton = ActiveSheet.Buttons.Add(rngCelluleBouton.Left, rngCelluleBouton.Top, rngCelluleBouton.Width, rngCelluleBouton.Height)
+    With btnBouton
         .Caption = "Calcul note"
         .OnAction = "btnCalculNote_Click"
     End With
-    With Range(Cells(3, colonneDepart + totalCompetences), Cells(5, colonneDepart + totalCompetences))
+    With Range(Cells(3, intIndiceColonneDepart + intTotalCompetences), Cells(5, intIndiceColonneDepart + intTotalCompetences))
         .Interior.ColorIndex = intColorNote
         .MergeCells = True
         .Orientation = xlUpward
         .Value = "Note / 20"
         .Columns.ColumnWidth = 6
     End With
-    Range(Cells(6, colonneDepart + totalCompetences), Cells(5 + nombreEleves, colonneDepart + totalCompetences)).Interior.ColorIndex = intColorNote2
-    With Range(Cells(3, colonneDepart + totalCompetences), Cells(5 + nombreEleves, colonneDepart + totalCompetences))
+    Range(Cells(6, intIndiceColonneDepart + intTotalCompetences), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences)).Interior.ColorIndex = intColorNote2
+    With Range(Cells(3, intIndiceColonneDepart + intTotalCompetences), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences))
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
         .Borders.Weight = xlThin
@@ -239,7 +250,7 @@ Sub ajouterEvaluation(colonneDepart As Integer)
         .Borders(xlEdgeRight).Weight = xlMedium
         .Borders(xlInsideHorizontal).Weight = xlThin
     End With
-    With Range(Cells(1, colonneDepart), Cells(2, colonneDepart + totalCompetences - 1))
+    With Range(Cells(1, intIndiceColonneDepart), Cells(2, intIndiceColonneDepart + intTotalCompetences - 1))
         .Borders.ColorIndex = xlColorIndexAutomatic
         .Borders.LineStyle = xlContinuous
         .Borders.Weight = xlThin
@@ -248,26 +259,29 @@ Sub ajouterEvaluation(colonneDepart As Integer)
         .Borders(xlEdgeLeft).Weight = xlMedium
         .Borders(xlEdgeRight).Weight = xlMedium
     End With
-    Range(Cells(1, colonneDepart), Cells(5 + nombreEleves, colonneDepart + totalCompetences)).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
-    Range(Cells(6, 1), Cells(5 + nombreEleves, colonneDepart + totalCompetences)).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
-    Range(Cells(1, colonneDepart), Cells(2, colonneDepart + totalCompetences - 1)).Locked = False
-    Range(Cells(5, colonneDepart), Cells(5 + nombreEleves, colonneDepart + totalCompetences - 1)).Locked = False
+    Range(Cells(1, intIndiceColonneDepart), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences)).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
+    Range(Cells(6, 1), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences)).BorderAround xlDouble, xlThin, xlColorIndexAutomatic
+    Range(Cells(1, intIndiceColonneDepart), Cells(2, intIndiceColonneDepart + intTotalCompetences - 1)).Locked = False
+    Range(Cells(5, intIndiceColonneDepart), Cells(5 + intNombreEleves, intIndiceColonneDepart + intTotalCompetences - 1)).Locked = False
     
 End Sub
 
 Sub btnCalculNote_Click()
+    Dim intIndiceEval As Integer
+    Dim intNombreCompetences As Integer
+    Dim intIndiceColonneDepart As Integer
 
     ' Determiner éval à calculer
-    indexEval = Val(Right(Application.Caller, 1)) - 1
-    nombreCompetences = getNombreCompetences
-    colonneDepart = 3 + (indexEval - 1) * (nombreCompetences + 1)
+    intIndiceEval = Val(Right(Application.Caller, 1)) - 1
+    intNombreCompetences = getNombreCompetences
+    intIndiceColonneDepart = 3 + (intIndiceEval - 1) * (intNombreCompetences + 1)
     
     ' Retrait protection feuille
     Application.ScreenUpdating = False
     ActiveSheet.Unprotect strPassword
     
     ' Calcul note éval
-    calculNote (colonneDepart)
+    calculNote (intIndiceColonneDepart)
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
@@ -276,30 +290,33 @@ Sub btnCalculNote_Click()
     
 End Sub
 
-Sub calculNote(colonneDepart As Integer)
-    Dim lettre As String
+Sub calculNote(intIndiceColonneDepart As Integer)
+    Dim strLettre As String
+    Dim intNombreEleves As Integer, intIndiceEleve As Integer
+    Dim intNombreCompetences As Integer, intIndiceCompetence As Integer, intCoeffCompetence As Integer
+    Dim intSomme As Integer, intDiviseur As Integer
 
     ' Calcul données nécessaires
-    nombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
-    nombreCompetences = getNombreCompetences
+    intNombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+    intNombreCompetences = getNombreCompetences
     
     ' Calcul note éval
-    For indexEleve = 1 To nombreEleves
-        diviseur = 0
-        somme = 0
-        For indexCompetence = 1 To nombreCompetences
-            lettre = ActiveSheet.Cells(5 + indexEleve, colonneDepart + indexCompetence - 1).Value
-            coeffCompetence = ActiveSheet.Cells(5, colonneDepart + indexCompetence - 1).Value
-            If StrComp(lettre, vbNullString) <> 0 And IsEmpty(coeffCompetence) = False Then
-                somme = somme + lettreToValeur(lettre) * coeffCompetence
-                diviseur = diviseur + coeffCompetence
+    For intIndiceEleve = 1 To intNombreEleves
+        intDiviseur = 0
+        intSomme = 0
+        For intIndiceCompetence = 1 To intNombreCompetences
+            strLettre = ActiveSheet.Cells(5 + intIndiceEleve, intIndiceColonneDepart + intIndiceCompetence - 1).Value
+            intCoeffCompetence = ActiveSheet.Cells(5, intIndiceColonneDepart + intIndiceCompetence - 1).Value
+            If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(intCoeffCompetence) = False Then
+                intSomme = intSomme + lettreToValeur(strLettre) * intCoeffCompetence
+                intDiviseur = intDiviseur + intCoeffCompetence
             End If
-        Next indexCompetence
-        If diviseur <> 0 Then
-            Cells(5 + indexEleve, colonneDepart + nombreCompetences).Value = Format(5 * somme / diviseur, "Standard")
-        ElseIf somme = 0 And diviseur = 0 Then
-            Cells(5 + indexEleve, colonneDepart + nombreCompetences).Value = vbNullString
+        Next intIndiceCompetence
+        If intDiviseur <> 0 Then
+            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = Format(5 * intSomme / intDiviseur, "Standard")
+        ElseIf intSomme = 0 And intDiviseur = 0 Then
+            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = vbNullString
         End If
-    Next indexEleve
+    Next intIndiceEleve
 End Sub
 

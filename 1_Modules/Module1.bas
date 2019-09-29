@@ -92,7 +92,7 @@ Function getNombreEleves(Optional varClasse As Variant) As Integer
         Select Case VarType(varClasse)
         Case 2                                   ' Parameter is an Interger -> Class index
             getNombreEleves = Sheets(strPage1).Cells(12 + varClasse, intColClasse + 1)
-        Case 7                                   ' Parameter is a String -> Class name
+        Case 8                                   ' Parameter is a String -> Class name
             getNombreEleves = Application.VLookup(varClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
         Case Else                                ' Parameter is another type
             getNombreEleves = -1
@@ -277,8 +277,10 @@ Sub btnCreerListeEleve_Click()
     For intIndiceDomaine = 1 To intNombreDomaines
         intNombreCompetences = getNombreCompetences(intIndiceDomaine)
         If Not IsEmpty(intNombreCompetences) And IsNumeric(intNombreCompetences) Then
-            If intNombreCompetences > intNombreMaxCompetences Then Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMaxCompetences
-            ElseIf intNombreCompetences < intNombreMinCompetences Then Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMinCompetences
+            If intNombreCompetences > intNombreMaxCompetences Then
+                Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMaxCompetences
+            ElseIf intNombreCompetences < intNombreMinCompetences Then
+                Sheets(strPage1).Cells(12 + intIndiceDomaine, 3).Value = intNombreMinCompetences
             End If
             intCompteur = intCompteur + 1
         End If
@@ -294,8 +296,10 @@ Sub btnCreerListeEleve_Click()
     For intIndiceClasse = 1 To intNombreClasses
         intNombreEleves = getNombreEleves(intIndiceClasse)
         If Not IsEmpty(intNombreEleves) And IsNumeric(intNombreEleves) Then
-            If intNombreEleves > intNombreMaxEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMaxEleves
-            ElseIf intNombreEleves < intNombreMinEleves Then Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMinEleves
+            If intNombreEleves > intNombreMaxEleves Then
+                Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMaxEleves
+            ElseIf intNombreEleves < intNombreMinEleves Then
+                Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreMinEleves
             End If
             intCompteur = intCompteur + 1
         End If
