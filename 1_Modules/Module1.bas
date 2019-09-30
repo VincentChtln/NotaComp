@@ -9,7 +9,7 @@ Option Explicit
 ' CONSTANTES
 ' **********************************
 ' Version de l'outil
-Global Const strVersion As String = "v 2.1"
+Global Const strVersion As String = "v 2.2"
 ' Nom des pages & protection
 Global Const strPage1 As String = "Page d'accueil"
 Global Const strPage2 As String = "Liste de classe"

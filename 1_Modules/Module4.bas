@@ -231,7 +231,7 @@ Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
     Dim intNombreDomaines As Integer
     Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer
     Dim intNombreEvals As Integer, intIndiceEval
-    Dim intNote As Integer, intSomme As Integer, intDiviseur As Integer, intCoeffEval As Integer
+    Dim dblNote As Double, intSomme As Integer, intDiviseur As Integer, intCoeffEval As Integer
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
@@ -247,10 +247,10 @@ Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
         intDiviseur = 0
         For intIndiceEval = 1 To intNombreEvals
             If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
-                intNote = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
-                If IsEmpty(intNote) = False Then
+                dblNote = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
+                If Not IsEmpty(dblNote) Then
                     intCoeffEval = Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
-                    intSomme = intSomme + intCoeffEval * intNote
+                    intSomme = intSomme + intCoeffEval * dblNote
                     intDiviseur = intDiviseur + intCoeffEval
                 End If
             End If
