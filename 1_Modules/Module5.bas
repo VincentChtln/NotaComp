@@ -127,7 +127,7 @@ Public Sub importModulesToVBProject()
     
     ' Vérifie si le projet VB n'est pas protégé
     If isVBProjectProtected(wbTarget) Then
-        MsgBox ("Projet VBA annulé, accès refusé. Opération annulée.")
+        MsgBox ("Projet VBA protégé, accès refusé. Opération annulée.")
         Exit Sub
     End If
     
