@@ -90,31 +90,17 @@ Function getNombreEleves(Optional varClasse As Variant) As Integer
         getNombreEleves = Application.Sum(Range(Sheets(strPage1).Cells(13, intColClasse + 1), Cells(12 + intNombreClasses, intColClasse + 1)))
     Else
         Select Case VarType(varClasse)
-        Case 2                                   ' Parameter is an Interger -> Class index
-            getNombreEleves = Sheets(strPage1).Cells(12 + varClasse, intColClasse + 1)
-        Case 8                                   ' Parameter is a String -> Class name
+        Case vbInteger              ' Parameter is an Interger -> Class index
+            getNombreEleves = Sheets(strPage1).Cells(12 + varClasse, intColClasse + 1).Value
+        Case vbDouble               ' Parameter is a Double -> Class index
+            getNombreEleves = Sheets(strPage1).Cells(12 + varClasse, intColClasse + 1).Value
+        Case vbString               ' Parameter is a String -> Class name
             getNombreEleves = Application.VLookup(varClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
-        Case Else                                ' Parameter is another type
+        Case Else                   ' Parameter is another type
             getNombreEleves = -1
         End Select
     End If
 End Function
-
-'
-'Function getNombreEleves(Optional strNomClasse As String, Optional intIndiceClasse As Integer) As Integer
-'    Dim intNombreClasses As Integer
-'    intNombreClasses = getNombreClasses
-'    getNombreEleves = -1
-'    If Not IsMissing(intIndiceClasse) Then
-'        getNombreEleves = Sheets(strPage1).Cells(12 + intIndiceClasse, intColClasse + 1)
-'    Else
-'        If Not IsMissing(strNomClasse) Then
-'            getNombreEleves = Application.VLookup(strNomClasse, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 6), Sheets(strPage1).Cells(12 + intNombreClasses, 7)), 2, False)
-'        Else
-'            getNombreEleves = Application.Sum(Range(Sheets(strPage1).Cells(13, intColClasse + 1), Cells(12 + intNombreClasses, intColClasse + 1)))
-'        End If
-'    End If
-'End Function
 
 ' **********************************
 ' PROCÉDURES
@@ -329,6 +315,5 @@ Sub btnCreerListeEleve_Click()
     Else
         MsgBox ("Opération annulée")
     End If
-    
 End Sub
 

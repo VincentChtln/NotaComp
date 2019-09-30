@@ -53,7 +53,7 @@ Sub creerTableauNotes(intIndiceClasse As Integer, intNombreEleves As Integer)
     strNomClasse = getNomClasse(intIndiceClasse)
     
     ' Deverouillage
-    Application.ScreenUpdating = True
+    Application.ScreenUpdating = False
     ActiveWorkbook.Unprotect strPassword
     
     ' Creation page

@@ -64,8 +64,8 @@ Sub creerListeEleve()
     ' Creation listes vides
     For intColonne = 1 To (2 * intNombreClasses)
         If intColonne Mod 2 = 1 Then
-            ' Formatage intColonne paire
-            intNombreEleves = getNombreEleves((intColonne + 1) / 2)
+            ' Formatage colonne impaire
+            intNombreEleves = getNombreEleves(Int((intColonne + 1) / 2))
             Columns(intColonne).ColumnWidth = 40
             For intLigBouton = 1 To 2
                 Set rngBouton = Cells(intLigBouton, intColonne)
@@ -100,7 +100,7 @@ Sub creerListeEleve()
                 .Locked = False
             End With
         Else
-            ' Formatage intColonne impaire
+            ' Formatage colonne paire
             Columns(intColonne).ColumnWidth = 5
         End If
     Next intColonne
