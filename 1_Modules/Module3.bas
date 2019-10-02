@@ -40,6 +40,10 @@ Function valeurToLettre(intValeur As Integer) As String
     End If
 End Function
 
+Function getNombreEvals(strNomClasse As String) As Integer
+    getNombreEvals = Sheets("Notes (" & strNomClasse & ")").Buttons.Count - 1
+End Function
+
 ' **********************************
 ' PROCÉDURES
 ' **********************************
@@ -290,11 +294,12 @@ Sub btnCalculNote_Click()
     
 End Sub
 
+' Sub calculNote(strNomClasse as String, intIndiceEval as Integer)
 Sub calculNote(intIndiceColonneDepart As Integer)
     Dim strLettre As String
     Dim intNombreEleves As Integer, intIndiceEleve As Integer
-    Dim intNombreCompetences As Integer, intIndiceCompetence As Integer, intCoeffCompetence As Integer
-    Dim intSomme As Integer, intDiviseur As Integer
+    Dim intNombreCompetences As Integer, intIndiceCompetence As Integer, dblCoeffCompetence As Double
+    Dim dblSomme As Double, dblDiviseur As Double
 
     ' Calcul données nécessaires
     intNombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
@@ -302,19 +307,19 @@ Sub calculNote(intIndiceColonneDepart As Integer)
     
     ' Calcul note éval
     For intIndiceEleve = 1 To intNombreEleves
-        intDiviseur = 0
-        intSomme = 0
+        dblDiviseur = 0
+        dblSomme = 0
         For intIndiceCompetence = 1 To intNombreCompetences
             strLettre = ActiveSheet.Cells(5 + intIndiceEleve, intIndiceColonneDepart + intIndiceCompetence - 1).Value
-            intCoeffCompetence = ActiveSheet.Cells(5, intIndiceColonneDepart + intIndiceCompetence - 1).Value
-            If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(intCoeffCompetence) = False Then
-                intSomme = intSomme + lettreToValeur(strLettre) * intCoeffCompetence
-                intDiviseur = intDiviseur + intCoeffCompetence
+            dblCoeffCompetence = ActiveSheet.Cells(5, intIndiceColonneDepart + intIndiceCompetence - 1).Value
+            If StrComp(strLettre, vbNullString) <> 0 And Not IsEmpty(dblCoeffCompetence) Then
+                dblSomme = dblSomme + lettreToValeur(strLettre) * dblCoeffCompetence
+                dblDiviseur = dblDiviseur + dblCoeffCompetence
             End If
         Next intIndiceCompetence
-        If intDiviseur <> 0 Then
-            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = Format(5 * intSomme / intDiviseur, "Standard")
-        ElseIf intSomme = 0 And intDiviseur = 0 Then
+        If dblDiviseur <> 0 Then
+            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = Format(5 * dblSomme / dblDiviseur, "Standard")
+        ElseIf dblSomme = 0 And dblDiviseur = 0 Then
             Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = vbNullString
         End If
     Next intIndiceEleve

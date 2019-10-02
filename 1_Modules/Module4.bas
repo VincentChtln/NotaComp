@@ -143,15 +143,17 @@ Sub btnActualiserResultats_Click()
     Dim strNomClasse As String
     Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
     Dim intIndiceTrimestre As Integer
+    Dim intNombreEvals As Integer
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
     intNombreDomaines = getNombreDomaines
-    
+    intNombreEvals = getNombreEvals(strNomClasse)
+
     ' Retrait protection page notes
     Application.ScreenUpdating = False
     Sheets("Bilan (" & strNomClasse & ")").Unprotect strPassword
-    
+
     For intIndiceTrimestre = 1 To 4
         For intIndiceDomaine = 1 To intNombreDomaines
             calculMoyenneDomaine intIndiceDomaine, intIndiceTrimestre
@@ -176,7 +178,7 @@ Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Inte
     Dim intNombreCompetences As Integer, intIndiceCompetence As Integer
     Dim intNombreEvals As Integer, intIndiceEval As Integer
     Dim strLettre As String
-    Dim intSomme As Integer, intDiviseur As Integer, intCoeffCompetence As Integer
+    Dim dblSomme As Double, dblDiviseur As Double, dblCoeffCompetence As Double
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
@@ -200,23 +202,23 @@ Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Inte
         
         ' Calcul de la moyenne
         For intIndiceEleve = 1 To intNombreEleves
-            intSomme = 0
-            intDiviseur = 0
+            dblSomme = 0
+            dblDiviseur = 0
             For intIndiceEval = 1 To intNombreEvals
                 If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
                     For intIndiceCompetence = intNumeroTotalCompetences To intNumeroTotalCompetences + intNombreCompetences - 1
                         strLettre = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
-                        intCoeffCompetence = Sheets("Notes (" & strNomClasse & ")").Cells(5, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
-                        If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(intCoeffCompetence) = False Then
-                            intSomme = intSomme + intCoeffCompetence * lettreToValeur(strLettre)
-                            intDiviseur = intDiviseur + intCoeffCompetence
+                        dblCoeffCompetence = Sheets("Notes (" & strNomClasse & ")").Cells(5, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
+                        If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(dblCoeffCompetence) = False Then
+                            dblSomme = dblSomme + dblCoeffCompetence * lettreToValeur(strLettre)
+                            dblDiviseur = dblDiviseur + dblCoeffCompetence
                         End If
                     Next intIndiceCompetence
                 End If
             Next intIndiceEval
-            If intSomme <> 0 Then
-                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = valeurToLettre(intSomme / intDiviseur)
-            ElseIf intSomme = 0 And intDiviseur = 0 Then
+            If dblSomme <> 0 Then
+                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = valeurToLettre(dblSomme / dblDiviseur)
+            ElseIf dblSomme = 0 And dblDiviseur = 0 Then
                 Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = vbNullString
             End If
         Next intIndiceEleve
@@ -231,7 +233,7 @@ Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
     Dim intNombreDomaines As Integer
     Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer
     Dim intNombreEvals As Integer, intIndiceEval
-    Dim dblNote As Double, intSomme As Integer, intDiviseur As Integer, intCoeffEval As Integer
+    Dim dblNote As Double, dblSomme As Double, dblDiviseur As Double, dblCoeffEval As Double
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
@@ -243,21 +245,21 @@ Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
     
     ' Calcul de la moyenne
     For intIndiceEleve = 1 To intNombreEleves
-        intSomme = 0
-        intDiviseur = 0
+        dblSomme = 0
+        dblDiviseur = 0
         For intIndiceEval = 1 To intNombreEvals
             If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
                 dblNote = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
                 If Not IsEmpty(dblNote) Then
-                    intCoeffEval = Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
-                    intSomme = intSomme + intCoeffEval * dblNote
-                    intDiviseur = intDiviseur + intCoeffEval
+                    dblCoeffEval = Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
+                    dblSomme = dblSomme + dblCoeffEval * dblNote
+                    dblDiviseur = dblDiviseur + dblCoeffEval
                 End If
             End If
         Next intIndiceEval
-        If intSomme <> 0 Then
-            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = Format(intSomme / intDiviseur, "Standard")
-        ElseIf intSomme = 0 And intDiviseur = 0 Then
+        If dblSomme <> 0 Then
+            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = Format(dblSomme / dblDiviseur, "Standard")
+        ElseIf dblSomme = 0 And dblDiviseur = 0 Then
             Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = vbNullString
         End If
     Next intIndiceEleve

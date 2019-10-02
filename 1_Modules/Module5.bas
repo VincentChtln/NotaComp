@@ -164,7 +164,7 @@ Public Sub importModulesToVBProject()
     With wbTarget.Sheets(strPage1)
         .Unprotect strPassword
         .Range("G5").Value = strVersion
-        .Range("G6").Value = Format(Now, "dd/mm/yyyy")
+        .Range("G6").Value = Format(Now, "MM/dd/yyyy")      ' Affiche la date en format "dd/MM/yyyy"
         .Protect strPassword
     End With
     Application.ScreenUpdating = True
