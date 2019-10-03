@@ -9,6 +9,7 @@ Option Explicit
 ' FONCTIONS
 ' lettreToValeur(lettre As String) As Integer
 ' valeurToLettre(valeur As Integer) As String
+' getNombreEvals(strNomClasse As String) As Integer
 ' **********************************
 
 Function lettreToValeur(strLettre As String) As Integer
@@ -189,7 +190,7 @@ End Sub
 Sub ajouterEvaluation(intIndiceColonneDepart As Integer)
     Dim intNombreEleves As Integer
     Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
-    Dim intTotalCompetences As Integer, intMoitieTotalCompetences, intIndiceCompetence As Integer, intNombreCompetences
+    Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer, intIndiceCompetence As Integer, intNombreCompetences As Integer
     Dim rngCelluleBouton As Range, btnBouton As Variant
     
     ' Calcul données nécessaires
@@ -273,19 +274,19 @@ End Sub
 Sub btnCalculNote_Click()
     Dim intIndiceEval As Integer
     Dim intNombreCompetences As Integer
-    Dim intIndiceColonneDepart As Integer
+    Dim strNomClasse As String
 
     ' Determiner éval à calculer
     intIndiceEval = Val(Right(Application.Caller, 1)) - 1
     intNombreCompetences = getNombreCompetences
-    intIndiceColonneDepart = 3 + (intIndiceEval - 1) * (intNombreCompetences + 1)
+    strNomClasse = ActiveSheet.Range("A5").Value
     
     ' Retrait protection feuille
     Application.ScreenUpdating = False
     ActiveSheet.Unprotect strPassword
     
     ' Calcul note éval
-    calculNote (intIndiceColonneDepart)
+    calculNote strNomClasse, intIndiceEval
         
     ' Protection feuille
     ActiveSheet.EnableSelection = xlUnlockedCells
@@ -294,34 +295,40 @@ Sub btnCalculNote_Click()
     
 End Sub
 
-' Sub calculNote(strNomClasse as String, intIndiceEval as Integer)
-Sub calculNote(intIndiceColonneDepart As Integer)
+Sub calculNote(strNomClasse As String, intIndiceEval As Integer)
+    Dim shtPage3 As Worksheet
     Dim strLettre As String
     Dim intNombreEleves As Integer, intIndiceEleve As Integer
     Dim intNombreCompetences As Integer, intIndiceCompetence As Integer, dblCoeffCompetence As Double
     Dim dblSomme As Double, dblDiviseur As Double
+    Dim intIndiceColonneEval As Integer
 
     ' Calcul données nécessaires
-    intNombreEleves = getNombreEleves(ActiveSheet.Cells(5, 1).Value)
+    '@Ignore ImplicitActiveWorkbookReference
+    Set shtPage3 = Sheets("Notes (" & strNomClasse & ")")
+    intNombreEleves = getNombreEleves(strNomClasse)
     intNombreCompetences = getNombreCompetences
+    intIndiceColonneEval = 3 + (intIndiceEval - 1) * (intNombreCompetences + 1)
     
     ' Calcul note éval
     For intIndiceEleve = 1 To intNombreEleves
         dblDiviseur = 0
         dblSomme = 0
         For intIndiceCompetence = 1 To intNombreCompetences
-            strLettre = ActiveSheet.Cells(5 + intIndiceEleve, intIndiceColonneDepart + intIndiceCompetence - 1).Value
-            dblCoeffCompetence = ActiveSheet.Cells(5, intIndiceColonneDepart + intIndiceCompetence - 1).Value
+            strLettre = shtPage3.Cells(5 + intIndiceEleve, intIndiceColonneEval + intIndiceCompetence - 1).Value
+            dblCoeffCompetence = shtPage3.Cells(5, intIndiceColonneEval + intIndiceCompetence - 1).Value
             If StrComp(strLettre, vbNullString) <> 0 And Not IsEmpty(dblCoeffCompetence) Then
                 dblSomme = dblSomme + lettreToValeur(strLettre) * dblCoeffCompetence
                 dblDiviseur = dblDiviseur + dblCoeffCompetence
             End If
         Next intIndiceCompetence
         If dblDiviseur <> 0 Then
-            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = Format(5 * dblSomme / dblDiviseur, "Standard")
+            shtPage3.Cells(5 + intIndiceEleve, intIndiceColonneEval + intNombreCompetences).Value = Format(5# * dblSomme / dblDiviseur, "Standard")
         ElseIf dblSomme = 0 And dblDiviseur = 0 Then
-            Cells(5 + intIndiceEleve, intIndiceColonneDepart + intNombreCompetences).Value = vbNullString
+            shtPage3.Cells(5 + intIndiceEleve, intIndiceColonneEval + intNombreCompetences).Value = vbNullString
         End If
     Next intIndiceEleve
+    
+    Set shtPage3 = Nothing
 End Sub
 

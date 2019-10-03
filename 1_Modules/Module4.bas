@@ -143,26 +143,34 @@ Sub btnActualiserResultats_Click()
     Dim strNomClasse As String
     Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
     Dim intIndiceTrimestre As Integer
-    Dim intNombreEvals As Integer
+    Dim intNombreEvals As Integer, intIndiceEval As Integer
+    Dim shtPage3 As Worksheet, shtPage4 As Worksheet
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
+    Set shtPage3 = Sheets("Notes (" & strNomClasse & ")")
+    Set shtPage4 = Sheets("Bilan (" & strNomClasse & ")")
     intNombreDomaines = getNombreDomaines
     intNombreEvals = getNombreEvals(strNomClasse)
 
     ' Retrait protection page notes
     Application.ScreenUpdating = False
-    Sheets("Bilan (" & strNomClasse & ")").Unprotect strPassword
+    shtPage3.Unprotect strPassword
+    shtPage4.Unprotect strPassword
 
+    For intIndiceEval = 1 To intNombreEvals
+        calculNote strNomClasse, intIndiceEval
+    Next intIndiceEval
     For intIndiceTrimestre = 1 To 4
         For intIndiceDomaine = 1 To intNombreDomaines
-            calculMoyenneDomaine intIndiceDomaine, intIndiceTrimestre
+            calculMoyenneDomaine strNomClasse, intIndiceDomaine, intIndiceTrimestre
         Next intIndiceDomaine
-        calculMoyenneTrimestre intIndiceTrimestre
+        calculMoyenneTrimestre strNomClasse, intIndiceTrimestre
     Next intIndiceTrimestre
     
     ' Protection page notres
-    Sheets("Bilan (" & strNomClasse & ")").Protect strPassword
+    shtPage3.Protect strPassword
+    shtPage4.Protect strPassword
     Application.ScreenUpdating = True
     
     MsgBox ("Données mises à jour.")
@@ -170,8 +178,7 @@ End Sub
 
 ' Calcul de la moyenne trimestrielle/annuelle pour chaque domaine
 ' intIndiceTrimestre = 4 pour indiquer l'année
-Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Integer)
-    Dim strNomClasse As String
+Sub calculMoyenneDomaine(strNomClasse As String, intNumeroDomaine As Integer, intIndiceTrimestre As Integer)
     Dim intNombreEleves As Integer, intIndiceEleve As Integer
     Dim intNombreDomaines As Integer, intIndiceDomaine As Integer
     Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer, intNumeroTotalCompetences As Integer
@@ -179,10 +186,12 @@ Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Inte
     Dim intNombreEvals As Integer, intIndiceEval As Integer
     Dim strLettre As String
     Dim dblSomme As Double, dblDiviseur As Double, dblCoeffCompetence As Double
+    Dim shtPage3 As Worksheet, shtPage4 As Worksheet
 
     ' Valeurs nécessaires
-    strNomClasse = Range("A3").Value
-    intNombreEvals = Sheets("Notes (" & strNomClasse & ")").Buttons.Count - 1
+    Set shtPage3 = Sheets("Notes (" & strNomClasse & ")")
+    Set shtPage4 = Sheets("Bilan (" & strNomClasse & ")")
+    intNombreEvals = getNombreEvals(strNomClasse)
     intNombreCompetences = getNombreCompetences(intNumeroDomaine)
     intTotalCompetences = getNombreCompetences
     intNombreEleves = getNombreEleves(strNomClasse)
@@ -205,10 +214,10 @@ Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Inte
             dblSomme = 0
             dblDiviseur = 0
             For intIndiceEval = 1 To intNombreEvals
-                If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
+                If intIndiceTrimestre = 4 Or shtPage3.Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
                     For intIndiceCompetence = intNumeroTotalCompetences To intNumeroTotalCompetences + intNombreCompetences - 1
-                        strLettre = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
-                        dblCoeffCompetence = Sheets("Notes (" & strNomClasse & ")").Cells(5, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
+                        strLettre = shtPage3.Cells(5 + intIndiceEleve, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
+                        dblCoeffCompetence = shtPage3.Cells(5, 2 + (intIndiceEval - 1) * (intTotalCompetences + 1) + intIndiceCompetence).Value
                         If StrComp(strLettre, vbNullString) <> 0 And IsEmpty(dblCoeffCompetence) = False Then
                             dblSomme = dblSomme + dblCoeffCompetence * lettreToValeur(strLettre)
                             dblDiviseur = dblDiviseur + dblCoeffCompetence
@@ -217,27 +226,31 @@ Sub calculMoyenneDomaine(intNumeroDomaine As Integer, intIndiceTrimestre As Inte
                 End If
             Next intIndiceEval
             If dblSomme <> 0 Then
-                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = valeurToLettre(dblSomme / dblDiviseur)
+                shtPage4.Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = valeurToLettre(dblSomme / dblDiviseur)
             ElseIf dblSomme = 0 And dblDiviseur = 0 Then
-                Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = vbNullString
+                shtPage4.Cells(3 + intIndiceEleve, 1 + 4 * (intNumeroDomaine - 1) + intIndiceTrimestre).Value = vbNullString
             End If
         Next intIndiceEleve
     End If
     
+    Set shtPage3 = Nothing
+    Set shtPage4 = Nothing
+    
 End Sub
 
 ' Calcul la moyenne des notes du trimestre
-Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
-    Dim strNomClasse As String
+Sub calculMoyenneTrimestre(strNomClasse As String, intIndiceTrimestre As Integer)
     Dim intNombreEleves As Integer, intIndiceEleve As Integer
     Dim intNombreDomaines As Integer
     Dim intTotalCompetences As Integer, intMoitieTotalCompetences As Integer
-    Dim intNombreEvals As Integer, intIndiceEval
-    Dim dblNote As Double, dblSomme As Double, dblDiviseur As Double, dblCoeffEval As Double
+    Dim intNombreEvals As Integer, intIndiceEval As Integer
+    Dim varNote As Variant, dblSomme As Double, dblDiviseur As Double, dblCoeffEval As Double
+    Dim shtPage3 As Worksheet, shtPage4 As Worksheet
 
     ' Valeurs nécessaires
-    strNomClasse = Range("A3").Value
-    intNombreEvals = Sheets("Notes (" & strNomClasse & ")").Buttons.Count - 1
+    Set shtPage3 = Sheets("Notes (" & strNomClasse & ")")
+    Set shtPage4 = Sheets("Bilan (" & strNomClasse & ")")
+    intNombreEvals = getNombreEvals(strNomClasse)
     intTotalCompetences = getNombreCompetences
     intNombreEleves = getNombreEleves(strNomClasse)
     intNombreDomaines = getNombreDomaines
@@ -248,21 +261,24 @@ Sub calculMoyenneTrimestre(intIndiceTrimestre As Integer)
         dblSomme = 0
         dblDiviseur = 0
         For intIndiceEval = 1 To intNombreEvals
-            If intIndiceTrimestre = 4 Or Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
-                dblNote = Sheets("Notes (" & strNomClasse & ")").Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
-                If Not IsEmpty(dblNote) Then
-                    dblCoeffEval = Sheets("Notes (" & strNomClasse & ")").Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
-                    dblSomme = dblSomme + dblCoeffEval * dblNote
+            If intIndiceTrimestre = 4 Or shtPage3.Cells(2, 3 + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value = intIndiceTrimestre Then
+                varNote = shtPage3.Cells(5 + intIndiceEleve, 2 + (intIndiceEval) * (intTotalCompetences + 1)).Value
+                If Not IsEmpty(varNote) Then
+                    dblCoeffEval = shtPage3.Cells(2, 3 + intMoitieTotalCompetences + (intIndiceEval - 1) * (intTotalCompetences + 1)).Value
+                    dblSomme = dblSomme + dblCoeffEval * CDbl(varNote)
                     dblDiviseur = dblDiviseur + dblCoeffEval
                 End If
             End If
         Next intIndiceEval
         If dblSomme <> 0 Then
-            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = Format(dblSomme / dblDiviseur, "Standard")
+            shtPage4.Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = Format(dblSomme / dblDiviseur, "Standard")
         ElseIf dblSomme = 0 And dblDiviseur = 0 Then
-            Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = vbNullString
+            shtPage4.Cells(3 + intIndiceEleve, 1 + 4 * intNombreDomaines + intIndiceTrimestre).Value = vbNullString
         End If
     Next intIndiceEleve
+    
+    Set shtPage3 = Nothing
+    Set shtPage4 = Nothing
     
 End Sub
 

@@ -56,7 +56,7 @@ Function getNombreCompetences(Optional intIndiceDomaine As Integer) As Integer
     Dim intNbDomaines As Integer
     intNbDomaines = getNombreDomaines
     getNombreCompetences = -1
-    If IsMissing(intIndiceDomaine) Or intIndiceDomaine = 0 Then
+    If intIndiceDomaine = 0 Then
         getNombreCompetences = Application.Sum(Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 3), Sheets(strPage1).Cells(12 + intNbDomaines, 3)))
     ElseIf intIndiceDomaine >= intNombreMinDomaines And intIndiceDomaine <= intNombreMaxDomaines Then
         getNombreCompetences = Application.VLookup("Domaine " & intIndiceDomaine, Sheets(strPage1).Range(Sheets(strPage1).Cells(13, 2), Sheets(strPage1).Cells(12 + intNbDomaines, 3)), 2, False)

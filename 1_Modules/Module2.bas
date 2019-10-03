@@ -206,7 +206,7 @@ Sub ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomCo
     Dim strPage3 As String, strPage4 As String
     Dim intNombreCompetences As Integer
     Dim intNombreEleves As Integer
-    Dim intNombreEval
+    Dim intNombreEval As Integer
     
     ' Données initiales
     strNomClasse = getNomClasse(intIndiceClasse)
