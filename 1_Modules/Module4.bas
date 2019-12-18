@@ -173,6 +173,8 @@ Sub btnActualiserResultats_Click()
     shtPage4.Protect strPassword
     Application.ScreenUpdating = True
     
+    shtPage4.Activate
+    
     MsgBox ("Données mises à jour.")
 End Sub
 

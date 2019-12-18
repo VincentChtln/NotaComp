@@ -277,7 +277,7 @@ Sub btnCalculNote_Click()
     Dim strNomClasse As String
 
     ' Determiner éval à calculer
-    intIndiceEval = Val(Right(Application.Caller, 1)) - 1
+    intIndiceEval = Val(Split(Application.Caller, " ")(1)) - 1
     intNombreCompetences = getNombreCompetences
     strNomClasse = ActiveSheet.Range("A5").Value
     
