@@ -91,6 +91,9 @@ Public Sub exportModulesToFolder()
         If cmpComponent.Type = vbext_ct_StdModule Then
             strFileName = cmpComponent.Name & ".bas"
             cmpComponent.Export properFolderPath(strGitFolder) & strFileName
+        ElseIf cmpComponent.Type = vbext_ct_MSForm Then
+            strFileName = cmpComponent.Name & ".frm"
+            cmpComponent.Export properFolderPath(strGitFolder) & strFileName
         End If
     Next cmpComponent
     

@@ -177,27 +177,26 @@ End Sub
 
 ' Procédure d'ajout d'un élève
 Sub btnAjouterEleve_Click()
-    Dim intIndiceClasse As Integer, strNomClasse As String
-    Dim intIndiceEleve As Integer, strNomEleve As String, strPrenomEleve As String, strNomComplet As String
-    
-    
-    ' Classe
-    intIndiceClasse = WorksheetFunction.RoundUp(Val(Right(Application.Caller, 1)) / 2, 0)
-    strNomClasse = getNomClasse(intIndiceClasse)
-
-    ' Eleve
-    strNomEleve = InputBox("Nom de l'élève à ajouter :")
-    strPrenomEleve = InputBox("Prénom de l'élève à ajouter :")
-    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
-    intIndiceEleve = getIndiceEleve(strNomComplet, intIndiceClasse, False)
-
-    'Confirmation
-    If MsgBox("Voulez vous ajouter l'élève '" & strNomComplet & "' à la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
-        ajouterEleve intIndiceClasse, intIndiceEleve, strNomComplet
-        MsgBox ("Élève ajouté !")
-    Else
-        MsgBox ("Opération annulée.")
-    End If
+    UserForm1.Show
+'    Dim intIndiceClasse As Integer, strNomClasse As String
+'    Dim intIndiceEleve As Integer, strNomEleve As String, strPrenomEleve As String, strNomComplet As String
+'
+'    ' Classe
+'    intIndiceClasse = WorksheetFunction.RoundUp(Val(Split(Application.Caller, " ")(1)) / 2, 0)
+'    strNomClasse = getNomClasse(intIndiceClasse)
+'
+'    ' Eleve
+'    strNomEleve = InputBox("Nom de l'élève à ajouter :")
+'    strPrenomEleve = InputBox("Prénom de l'élève à ajouter :")
+'    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
+'    intIndiceEleve = getIndiceEleve(strNomComplet, intIndiceClasse, False)
+'
+'    'Confirmation
+'    If MsgBox("Voulez vous ajouter l'élève '" & strNomComplet & "' à la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
+'        ajouterEleve intIndiceClasse, intIndiceEleve, strNomComplet
+'    Else
+'        MsgBox ("Opération annulée.")
+'    End If
 
 End Sub
 
@@ -215,8 +214,8 @@ Sub ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomCo
     intNombreCompetences = getNombreCompetences
     intNombreEleves = getNombreEleves(strNomClasse)
     
-    If Not (intIndiceEleve > intNombreMinEleves And intIndiceEleve <= intNombreEleves + 1) Then
-        MsgBox ("L'indice de l'élève n'est pas compris dans la classe.")
+    If Not (intIndiceEleve > 0 And intIndiceEleve <= intNombreEleves + 1) Then
+        MsgBox ("L'indice de l'élève n'est pas compris dans la classe. Opération annulée")
         Exit Sub
     End If
     
@@ -291,32 +290,35 @@ Sub ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomCo
     
     Application.ScreenUpdating = True
     
+    MsgBox ("Élève ajouté !")
+    
 End Sub
 
 Sub btnSupprimerEleve_Click()
-    Dim intIndiceClasse As Integer, strNomClasse As String
-    Dim strNomEleve As String, strPrenomEleve As String, strNomComplet As String
-    
-    ' Classe
-    intIndiceClasse = WorksheetFunction.RoundUp(Val(Right(Application.Caller, 1)) / 2, 0)
-    strNomClasse = getNomClasse(intIndiceClasse)
-
-    ' Eleve
-    strNomEleve = InputBox("Nom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
-    strPrenomEleve = InputBox("Prénom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
-    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
-
-    'Confirmation
-    If MsgBox("Voulez vous supprimer l'élève '" & strNomComplet & "' de la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
-        If getIndiceEleve(strNomComplet, intIndiceClasse, True) <> -1 Then
-            supprimerEleve intIndiceClasse, strNomComplet
-            MsgBox ("Élève supprimé avec succès.")
-        Else
-            MsgBox ("L'élève '" & strNomComplet & "' n'a pas été trouvé dans la classe " & strNomClasse & ". Vérifiez l'orthographe.")
-        End If
-    Else
-        MsgBox ("Opération annulée.")
-    End If
+    UserForm2.Show
+'    Dim intIndiceClasse As Integer, strNomClasse As String
+'    Dim strNomEleve As String, strPrenomEleve As String, strNomComplet As String
+'
+'    ' Classe
+'    intIndiceClasse = WorksheetFunction.RoundUp(Val(Split(Application.Caller, " ")(1)) / 2, 0)
+'    strNomClasse = getNomClasse(intIndiceClasse)
+'
+'    ' Eleve
+'    strNomEleve = InputBox("Nom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
+'    strPrenomEleve = InputBox("Prénom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
+'    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
+'
+'    'Confirmation
+'    If MsgBox("Voulez vous supprimer l'élève '" & strNomComplet & "' de la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
+'        If getIndiceEleve(strNomComplet, intIndiceClasse, True) <> -1 Then
+'            supprimerEleve intIndiceClasse, strNomComplet
+'            MsgBox ("Élève supprimé avec succès.")
+'        Else
+'            MsgBox ("L'élève '" & strNomComplet & "' n'a pas été trouvé dans la classe " & strNomClasse & ". Vérifiez l'orthographe.")
+'        End If
+'    Else
+'        MsgBox ("Opération annulée.")
+'    End If
 
 End Sub
 
@@ -400,4 +402,5 @@ Sub supprimerEleve(intIndiceClasse As Integer, strNomComplet As String)
     
     Application.ScreenUpdating = True
 End Sub
+
 
