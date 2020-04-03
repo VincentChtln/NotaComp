@@ -8,7 +8,8 @@ Option Explicit
 ' **********************************
 ' CONSTANTES
 ' **********************************
-Const strGitFolder As String = "C:\Users\Utilisateur\Documents\GitHub\OutilNotationCompetence\1_Modules\"
+Const strGitFolder1 As String = "C:\Users\Utilisateur\Documents\GitHub\OutilNotationCompetence\"
+Const strGitFolder2 As String = "C:\Users\vincent.chatelain\Documents\GitHub\NotaComp\"
 Const strWBSource As String = "Outil de gestion des notes_Dev.xlsm"
 
 ' **********************************
@@ -54,9 +55,23 @@ Function properWBName(strFileName As String) As String
     End If
 End Function
 
+Function getModulesFolder(strUserName As String) As String
+    Select Case strUserName
+    Case Is = "Utilisateur"
+        getModulesFolder = strGitFolder1
+    Case Is = "CHATELAIN Vincent"
+        getModulesFolder = strGitFolder2
+    End Select
+    getModulesFolder = getModulesFolder & "1_Modules\"
+End Function
+
 ' **********************************
 ' PROCÉDURES
 ' **********************************
+
+Sub userDisplay()
+    MsgBox "current user is " & Application.UserName
+End Sub
 
 Public Sub updateVBProject()
     Call exportModulesToFolder
@@ -64,7 +79,7 @@ Public Sub updateVBProject()
 End Sub
 
 Public Sub exportModulesToFolder()
-    Dim bValidFolder As Boolean
+    Dim strModulesFolder As String, bValidFolder As Boolean
     Dim strFileName As String
     Dim FSO As New FileSystemObject
     Dim cmpComponent As VBIDE.VBComponent
@@ -75,13 +90,14 @@ Public Sub exportModulesToFolder()
         Exit Sub
     End If
     
+    strModulesFolder = getModulesFolder(Application.UserName)
     bValidFolder = False
     While Not bValidFolder
-        If FSO.FolderExists(strGitFolder) Then
+        If FSO.FolderExists(strModulesFolder) Then
             bValidFolder = True
-            deleteModulesInFolder (strGitFolder)
+            deleteModulesInFolder (strModulesFolder)
         Else
-            MsgBox ("Le dossier indiqué '" & strGitFolder & "' n'existe pas, opération annulée.")
+            MsgBox ("Le dossier indiqué '" & strModulesFolder & "' n'existe pas, opération annulée.")
             Exit Sub
         End If
     Wend
@@ -90,10 +106,10 @@ Public Sub exportModulesToFolder()
     For Each cmpComponent In Workbooks(strWBSource).VBProject.VBComponents
         If cmpComponent.Type = vbext_ct_StdModule Then
             strFileName = cmpComponent.Name & ".bas"
-            cmpComponent.Export properFolderPath(strGitFolder) & strFileName
+            cmpComponent.Export properFolderPath(strModulesFolder) & strFileName
         ElseIf cmpComponent.Type = vbext_ct_MSForm Then
             strFileName = cmpComponent.Name & ".frm"
-            cmpComponent.Export properFolderPath(strGitFolder) & strFileName
+            cmpComponent.Export properFolderPath(strModulesFolder) & strFileName
         End If
     Next cmpComponent
     
@@ -103,7 +119,7 @@ End Sub
 Public Sub importModulesToVBProject()
     Dim wbTarget As Workbook
     Dim strWBFolder As String, strWBName As String
-    Dim strImportFolder As String, strModulePath As String
+    Dim strImportFolder As String, strImportModulePath As String
     Dim bWBOK As Boolean, bImportFolderOK As Boolean
     Dim FSO As New FileSystemObject
     Dim indexModule As Integer
@@ -137,7 +153,7 @@ Public Sub importModulesToVBProject()
     ' Vérifie le dossier d'import
     bImportFolderOK = False
     While Not bImportFolderOK
-        strImportFolder = properFolderPath(InputBox("Chemin vers le dossier de modules", vbOKCancel, strGitFolder))
+        strImportFolder = properFolderPath(InputBox("Chemin vers le dossier de modules", vbOKCancel, getModulesFolder(Application.UserName)))
         If FSO.FolderExists(strImportFolder) Then
             bImportFolderOK = True
             If isFolderEmpty(strImportFolder) Then
@@ -154,9 +170,9 @@ Public Sub importModulesToVBProject()
     
     ' Import les nouveaux modules
     For indexModule = 1 To 4
-        strModulePath = strImportFolder & "Module" & indexModule & ".bas"
-        If FSO.FileExists(strModulePath) Then
-            wbTarget.VBProject.VBComponents.Import strModulePath
+        strImportModulePath = strImportFolder & "Module" & indexModule & ".bas"
+        If FSO.FileExists(strImportModulePath) Then
+            wbTarget.VBProject.VBComponents.Import strImportModulePath
         Else
             MsgBox ("Import Module" & indexModule & ".bas échoué, fichier non trouvé.")
         End If

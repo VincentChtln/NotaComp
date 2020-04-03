@@ -55,11 +55,7 @@ Sub creerListeEleve()
     Cells.Locked = True
     
     ' Figeage volets
-    With ActiveWindow
-        .SplitColumn = 0
-        .SplitRow = 3
-        .FreezePanes = True
-    End With
+    freezePanes ActiveWindow, 0, 3
     
     ' Creation listes vides
     For intColonne = 1 To (2 * intNombreClasses)

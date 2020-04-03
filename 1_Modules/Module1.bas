@@ -15,7 +15,7 @@ Global Const strPage1 As String = "Page d'accueil"
 Global Const strPage2 As String = "Liste de classe"
 Global Const strPassword As String = "Saint-Martin"
 ' Couleurs
-Global Const intColorDomaine As Integer = 10
+Global Const intColorDomaine As Integer = 50
 Global Const intColorDomaine2 As Integer = 35
 Global Const intColorClasse As Integer = 44
 Global Const intColorEval As Integer = intColorClasse
@@ -36,6 +36,28 @@ Const intLigDomaine As Integer = 10
 Const intColDomaine As Integer = 2
 Const intLigClasse As Integer = 10
 Const intColClasse As Integer = 6
+
+
+' **********************************
+' PROCEDURES GENERALES
+' freezePanes (wdw As Application, intIndiceColonne As Integer, intIndiceLigne As Integer)
+' unloadAllUserForms ()
+' **********************************
+
+Sub freezePanes(wdw As Application, intIndiceColonne As Integer, intIndiceLigne As Integer)
+    With wdw
+        .SplitColumn = intIndiceColonne
+        .SplitRow = intIndiceLigne
+        .freezePanes = True
+    End With
+End Sub
+
+Sub unloadAllUserForms()
+    For Each frm In VBA.UserForms
+        If TypeOf frm Is UserForm Then Unload frm
+    Next frm
+End Sub
+
 
 ' **********************************
 ' FONCTIONS

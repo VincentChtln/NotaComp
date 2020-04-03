@@ -136,11 +136,7 @@ Sub creerTableauNotes(intIndiceClasse As Integer, intNombreEleves As Integer)
     End With
     
     ' Figeage des volets
-    With ActiveWindow
-        .SplitColumn = 2
-        .SplitRow = 5
-        .FreezePanes = True
-    End With
+    freezePanes ActiveWindow, 2, 5
     
     '**** 1e EVALUATION ****
     intIndiceColonneDepart = 3

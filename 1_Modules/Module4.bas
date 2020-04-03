@@ -40,11 +40,7 @@ Sub creerTableauBilan(intIndiceClasse As Integer, intNombreEleves As Integer)
     End With
     
     ' Figeage des volets
-    With ActiveWindow
-        .SplitColumn = 1
-        .SplitRow = 3
-        .FreezePanes = True
-    End With
+    freezePanes ActiveWindow, 1, 3
     
     '**** COLONNE INFOS + LISTE ELEVE ****
     ' Taille ligne/colonne
