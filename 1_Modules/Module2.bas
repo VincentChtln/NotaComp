@@ -137,19 +137,32 @@ End Sub
 Sub btnCreerTableaux_Click()
     Dim intNombreClasses As Integer, intIndiceClasse As Integer
     Dim intNombreEleves As Integer
+    Dim intAvancementActuel As Integer, intAvancementTotal As Integer
     
     intNombreClasses = getNombreClasses
+    intAvancementActuel = 0
+    intAvancementTotal = 2 * intNombreClasse
     
     ' Confirmation
     If MsgBox("Êtes-vous sûr(e) de valider ces listes ? Vous pourrez toujours ajouter des élèves mais il sera impossible de recréer les tableaux.", vbYesNo) = vbYes Then
         
+        ' Modification de l'affichage
+        UserForm5.Show vbModeless
         Application.ScreenUpdating = False
     
         ' Creation des pages 'Notes' et 'Bilan'
         For intIndiceClasse = 1 To intNombreClasses
             intNombreEleves = getNombreEleves(intIndiceClasse)
+            
+            ' Ajout du tableau des évaluations + actualisation du chargement
             creerTableauNotes intIndiceClasse, intNombreEleves
+            intAvancementActuel = intAvancementActuel + 1
+            UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
+            
+            ' Ajout du tableau bilan + actualisation du chargement
             creerTableauBilan intIndiceClasse, intNombreEleves
+            intAvancementActuel = intAvancementActuel + 1
+            UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
         Next intIndiceClasse
         
         ' Verouillage des listes
@@ -162,6 +175,7 @@ Sub btnCreerTableaux_Click()
             .Protect strPassword
         End With
         
+        UserForm5.Hide
         Application.ScreenUpdating = True
         
         MsgBox ("Tableaux de notes et de bilan créés avec succès !")

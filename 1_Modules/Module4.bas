@@ -141,6 +141,7 @@ Sub btnActualiserResultats_Click()
     Dim intIndiceTrimestre As Integer
     Dim intNombreEvals As Integer, intIndiceEval As Integer
     Dim shtPage3 As Worksheet, shtPage4 As Worksheet
+    Dim intAvancementTotal As Integer, intAvancementActuel As Integer
 
     ' Valeurs nécessaires
     strNomClasse = Range("A3").Value
@@ -148,29 +149,40 @@ Sub btnActualiserResultats_Click()
     Set shtPage4 = Sheets("Bilan (" & strNomClasse & ")")
     intNombreDomaines = getNombreDomaines
     intNombreEvals = getNombreEvals(strNomClasse)
+    
+    ' UserForm5: Avancement de l'opération
+    intAvancementActuel = 0
+    intAvancementTotal = intNombreEvals + 4 * intNombreDomaines
+    UserForm5.Show vbModeless
 
     ' Retrait protection page notes
     Application.ScreenUpdating = False
     shtPage3.Unprotect strPassword
     shtPage4.Unprotect strPassword
 
+    ' Calcul des résultats
     For intIndiceEval = 1 To intNombreEvals
         calculNote strNomClasse, intIndiceEval
+        intAvancementActuel = intAvancementActuel + 1
+        UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
     Next intIndiceEval
     For intIndiceTrimestre = 1 To 4
         For intIndiceDomaine = 1 To intNombreDomaines
             calculMoyenneDomaine strNomClasse, intIndiceDomaine, intIndiceTrimestre
+            intAvancementActuel = intAvancementActuel + 1
+            UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
         Next intIndiceDomaine
         calculMoyenneTrimestre strNomClasse, intIndiceTrimestre
     Next intIndiceTrimestre
     
-    ' Protection page notres
+    ' Protection page notes
     shtPage3.Protect strPassword
     shtPage4.Protect strPassword
     Application.ScreenUpdating = True
     
+    ' Opérations de fin de procédure
+    UserForm5.Hide
     shtPage4.Activate
-    
     MsgBox ("Données mises à jour.")
 End Sub
 
