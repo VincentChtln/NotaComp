@@ -19,22 +19,24 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
-' **********************************
+' ##################################
 ' PROCÉDURES
-' **********************************
+' ##################################
 ' UserForm_Initialize()
 ' textboxNomEleve_Change()
 ' textboxPrenomEleve_Change()
 ' btnAjouterEleve_Click()
-' **********************************
+' ##################################
 
 ' Initialisation de l'UF
 Private Sub UserForm_Initialize()
-    Dim intNombreClasse As Integer, intIndiceClasse As Integer, strNomClasse As String
+    Dim intNbClasse As Integer
+    Dim intIndiceClasse As Integer
+    Dim strNomClasse As String
     
-    intNombreClasse = getNombreClasses()
+    intNbClasse = getNombreClasses()
     
-    For intIndiceClasse = 1 To intNombreClasse
+    For intIndiceClasse = 1 To intNbClasse
         strNomClasse = getNomClasse(intIndiceClasse)
         listboxSelectionClasse.AddItem strNomClasse
     Next intIndiceClasse
@@ -54,8 +56,10 @@ End Sub
 
 ' Demande de confirmation puis ajout d'un nouvel élève
 Private Sub btnAjouterEleve_Click()
-    Dim intIndiceClasse As Integer, strNomClasse As String
-    Dim intIndiceEleve As Integer, strNomCompletEleve As String
+    Dim intIndiceClasse As Integer
+    Dim strNomClasse As String
+    Dim intIndiceEleve As Integer
+    Dim strNomCompletEleve As String
     
     intIndiceClasse = listboxSelectionClasse.ListIndex + 1
     strNomClasse = getNomClasse(intIndiceClasse)

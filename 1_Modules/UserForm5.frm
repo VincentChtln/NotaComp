@@ -29,5 +29,4 @@ Public Sub updateAvancement(intAvancementActuel As Integer, intAvancementTotal A
     intPourc = Me.limiterPourcentage(100 * intAvancementActuel / intAvancementTotal)
     UserForm5.lblChargement.Caption = intPourc & "% terminé"
     UserForm5.barChargement.Width = 2 * intPourc
-    UserForm5.Repaint
 End Sub

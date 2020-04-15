@@ -19,59 +19,74 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
-' **********************************
+' ##################################
 ' PROCÉDURES
-' **********************************
+' ##################################
 ' UserForm_Initialize()
 ' listboxSelectionClasse_Change()
 ' btnSupprimerEleve_Click()
-' **********************************
+' ##################################
 
 ' Initialisation de l'UF
 Private Sub UserForm_Initialize()
-    Dim intNombreClasse As Integer, intIndiceClasse As Integer, strNomClasse As String
+    ' *** DECLARATION VARIABLES ***
+    Dim intNbClasse As Integer
+    Dim intIndiceClasse As Integer
+    Dim strNomClasse As String
     
-    intNombreClasse = getNombreClasses()
+    ' *** AFFECTATION VARIABLES ***
+    intNbClasse = getNombreClasses()
     
-    For intIndiceClasse = 1 To intNombreClasse
+    ' *** AJOUT CLASSE DANS LISTE ***
+    For intIndiceClasse = 1 To intNbClasse
         strNomClasse = getNomClasse(intIndiceClasse)
         listboxSelectionClasse.AddItem strNomClasse
     Next intIndiceClasse
     
+    ' *** INITIALISATION SELECTION ***
     listboxSelectionClasse.ListIndex = 0
     listboxSelectionEleve.ListIndex = 0
 End Sub
 
 ' Modification de la liste Eleve en fonction de la classe sélectionnée
 Private Sub listboxSelectionClasse_Change()
-    Dim intIndiceClasse As Integer, intColonneClasse As Integer
-    Dim intNombreEleves As Integer, intIndiceEleve As Integer, strNomCompletEleve As String
+    ' *** DECLARATION VARIABLES ***
+    Dim intIndiceClasse As Integer
+    Dim intColonneClasse As Integer
+    Dim intNbEleves As Integer
+    Dim intIndiceEleve As Integer
+    Dim strNomCompletEleve As String
     
+    ' *** AFFECTATION VARIABLES ***
     listboxSelectionEleve.Clear
     intIndiceClasse = listboxSelectionClasse.ListIndex + 1
     intColonneClasse = 2 * intIndiceClasse - 1
-    intNombreEleves = getNombreEleves(intIndiceClasse)
+    intNbEleves = getNombreEleves(intIndiceClasse)
     
-    For intIndiceEleve = 1 To intNombreEleves
-        strNomCompletEleve = Cells(3 + intIndiceEleve, intColonneClasse).Value
+    ' *** AJOUT ELEVES DANS LISTE ***
+    For intIndiceEleve = 1 To intNbEleves
+        strNomCompletEleve = Worksheets(strPage2).Cells(intLigListePage2 + intIndiceEleve, intColonneClasse).Value
         listboxSelectionEleve.AddItem strNomCompletEleve
     Next intIndiceEleve
     
+    ' *** INITIALISATION INDEX ***
     listboxSelectionEleve.ListIndex = 0
 End Sub
 
 ' Demande de confirmation puis appel de la procédure supprimerEleve (Module 2)
 Private Sub btnSupprimerEleve_Click()
-    Dim intIndiceClasse As Integer, strNomClasse As String
-    Dim intIndiceEleve As Integer, strNomCompletEleve As String
+    Dim intIndiceClasse As Integer
+    Dim strNomClasse As String
+    Dim intIndiceEleve As Integer
+    Dim strNomComplet As String
     
     intIndiceClasse = 1 + listboxSelectionClasse.ListIndex
     strNomClasse = listboxSelectionClasse.Value
     intIndiceEleve = listboxSelectionEleve.ListIndex + 1
-    strNomCompletEleve = Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1)
+    strNomComplet = Worksheets(strPage2).Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1)
     
-    If vbYes = MsgBox("Vous êtes sur le point de supprimer '" & strNomCompletEleve & "' de la classe de " & strNomClasse & ". Voulez-vous poursuivre ?", vbYesNo, "Confirmation de suppression") Then
-        supprimerEleve intIndiceClasse, strNomCompletEleve
+    If vbYes = MsgBox("Vous êtes sur le point de supprimer '" & strNomComplet & "' de la classe de " & strNomClasse & ". Voulez-vous poursuivre ?", vbYesNo, "Confirmation de suppression") Then
+        supprimerEleve intIndiceClasse, intIndiceEleve
         MsgBox "Élève supprimé"
     Else
         MsgBox "Operation annulée"

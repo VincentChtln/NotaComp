@@ -5,412 +5,439 @@ Attribute VB_Name = "Module2"
 
 Option Explicit
 
-' **********************************
+' ##################################
 ' FONCTIONS
-' **********************************
+' ##################################
+' getIndiceEleve(strNomComplet As String, intIndiceClasse As Integer, bValeurExacte As Boolean) As Integer
+' ##################################
 
 ' Retourne l'index de l'élève s'il est dans la liste de la classe donnée en argument, -1 sinon
 ' valeurExacte = True -> on cherche la place de l'élève donné en argument (supposant qu'il fait partie de la classe)
 ' valeurExacte = False -> on cherche où intégrer l'élève pour respecter l'ordre alphabéthique
-Function getIndiceEleve(strNomComplet As String, intIndiceClasse As Integer, bValExacte As Boolean) As Integer
-    Dim intNombreEleves As Integer, intIndiceEleve As Integer
+Function getIndiceEleve(strNomComplet As String, intIndiceClasse As Integer, bValeurExacte As Boolean) As Integer
+    ' *** DECLARATION VARIABLES ***
+    Dim intNbEleves As Integer
+    Dim intIndiceEleve As Integer
     
-    intNombreEleves = getNombreEleves(intIndiceClasse)
+    ' *** AFFECTATION VARIABLES ***
+    intNbEleves = getNombreEleves(intIndiceClasse)
     getIndiceEleve = -1
-    For intIndiceEleve = 1 To intNombreEleves
-        If Not (bValExacte) Then
-            If StrComp(strNomComplet, Sheets(strPage2).Cells(3 + intIndiceEleve, intIndiceClasse * 2 - 1).Value) = -1 Then
+    
+    ' *** RECHERCHE INDICE EXACT ***
+    If bValeurExacte Then
+        For intIndiceEleve = 1 To intNbEleves
+            If StrComp(strNomComplet, Worksheets(strPage2).Cells(intLigListePage2 + intIndiceEleve, intIndiceClasse * 2 - 1).Value) = 0 Then
                 getIndiceEleve = intIndiceEleve
                 Exit For
-            ElseIf intIndiceEleve = intNombreEleves Then getIndiceEleve = intNombreEleves + 1
             End If
-        Else
-            If StrComp(strNomComplet, Sheets(strPage2).Cells(3 + intIndiceEleve, intIndiceClasse * 2 - 1).Value) = 0 Then getIndiceEleve = intIndiceEleve
-        End If
-    Next intIndiceEleve
+        Next intIndiceEleve
+        
+    ' *** RECHERCHE INDICE POUR INSERTION ***
+    Else
+        For intIndiceEleve = 1 To intNbEleves
+            If StrComp(strNomComplet, Worksheets(strPage2).Cells(intLigListePage2 + intIndiceEleve, intIndiceClasse * 2 - 1).Value) = -1 Then
+                getIndiceEleve = intIndiceEleve
+                Exit For
+            ElseIf intIndiceEleve = intNbEleves Then getIndiceEleve = intNbEleves + 1
+            End If
+        Next intIndiceEleve
+    End If
 End Function
 
-' **********************************
+' ##################################
 ' PROCÉDURES
-' **********************************
+' ##################################
+' creerListeEleve()
+' btnCreerTableaux_Click()
+' btnModifierListe_Click()
+'
+' btnAjouterEleve_Click()
+' ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomComplet As String)
+'
+' btnSupprimerEleve_Click()
+' supprimerEleve(intIndiceClasse As Integer, intIndiceEleve As Integer)
+'
+' transfererEleve(intClasseSource As Integer, intIndiceSourceEleve As Integer, intClasseDest As Integer, intIndiceDestEleve As Integer, strNomComplet As String)
+' copierNotesEleve(intIndiceClasseSource As Integer, intIndiceEleveSource As Integer, intIndiceClasseDest As Integer, intIndiceEleveDest As Integer)
+' ##################################
 
 Sub creerListeEleve()
-    Dim intNombreClasses As Integer, intNombreEleves As Integer
-    Dim intColonne As Integer, intLigBouton As Integer
+    ' *** DECLARATION VARIABLES ***
+    Dim intNbClasses As Integer
+    Dim intIndiceClasse As Integer
+    Dim intNbEleves As Integer
+    Dim intMaxEleves As Integer
+    Dim intColonne As Integer
     Dim rngBouton As Range
     Dim btnBouton As Variant
     
-    ' Données nécessaires
-    intNombreClasses = getNombreClasses
-
+    ' *** PROTECTION + REFRESH ECRAN OFF ***
     Application.ScreenUpdating = False
+    unprotectWorkbook
+    unprotectWorksheet
     
-    ' Creation page
-    ActiveWorkbook.Unprotect strPassword
-    Sheets.Add After:=Sheets(Sheets.Count)
-    Sheets(Sheets.Count).Name = strPage2
-    ActiveWorkbook.Protect strPassword, True, True
+    ' *** AJOUT PAGE 2 - LISTE ELEVE ***
+    Worksheets.Add After:=Worksheets(Worksheets.Count)
+    Worksheets(Worksheets.Count).Name = strPage2
     
-    Cells.Borders.ColorIndex = 2
-    Cells.Locked = True
+    With Worksheets(strPage2)
+        ' *** FORMATAGE PAGE ***
+        freezePanes ActiveWindow, intLigListePage2, 0
+        .Cells.Borders.ColorIndex = 2
+        .Cells.Locked = True
+        
+        ' *** AFFECTATION VARIABLES ***
+        intNbClasses = getNombreClasses
     
-    ' Figeage volets
-    freezePanes ActiveWindow, 0, 3
-    
-    ' Creation listes vides
-    For intColonne = 1 To (2 * intNombreClasses)
-        If intColonne Mod 2 = 1 Then
-            ' Formatage colonne impaire
-            intNombreEleves = getNombreEleves(Int((intColonne + 1) / 2))
-            Columns(intColonne).ColumnWidth = 40
-            For intLigBouton = 1 To 2
-                Set rngBouton = Cells(intLigBouton, intColonne)
-                Set btnBouton = ActiveSheet.Buttons.Add(rngBouton.Left, rngBouton.Top, rngBouton.Width, rngBouton.Height)
-                If intLigBouton = 1 Then
-                    With btnBouton
-                        .Caption = "Ajouter élève"
-                        .OnAction = "btnAjouterEleve_Click"
-                    End With
-                Else
-                    With btnBouton
-                        .Caption = "Supprimer élève"
-                        .OnAction = "btnSupprimerEleve_Click"
-                    End With
-                End If
-            Next intLigBouton
-            With Cells(3, intColonne)
-                .Borders.ColorIndex = 1
-                .Borders.LineStyle = xlContinuous
-                .Borders.Weight = xlMedium
-                .Interior.ColorIndex = intColorClasse
-                .Value = Sheets(strPage1).Cells(12 + (intColonne + 1) / 2, 6).Value
-                .HorizontalAlignment = xlHAlignCenter
-                .VerticalAlignment = xlVAlignCenter
-                .Locked = True
-            End With
-            With Range(Cells(4, intColonne), Cells(3 + intNombreEleves, intColonne))
-                .Borders.ColorIndex = 1
-                .Borders.LineStyle = xlContinuous
-                .Borders.Weight = xlThin
-                .VerticalAlignment = xlVAlignCenter
-                .Locked = False
-            End With
-        Else
-            ' Formatage colonne paire
-            Columns(intColonne).ColumnWidth = 5
-        End If
-    Next intColonne
-    
-    ' Creation bouton "Créer Tableaux"
-    Columns(intColonne).ColumnWidth = 30
-    Set rngBouton = Cells(1, intColonne)
-    Set btnBouton = ActiveSheet.Buttons.Add(rngBouton.Left, rngBouton.Top, rngBouton.Width, rngBouton.Height)
-    With btnBouton
-        .Caption = "Créer Tableaux"
-        .OnAction = "btnCreerTableaux_Click"
+        ' *** CREATION LISTE VIDE ***
+        For intColonne = 1 To (2 * intNbClasses)
+            If intColonne Mod 2 = 1 Then
+                ' *** AFFECTATION VARIABLES ***
+                intIndiceClasse = (intColonne + 1) / 2
+                
+                ' *** FORMATAGE COLONNE IMPAIRE ***
+                intNbEleves = getNombreEleves(intIndiceClasse)
+                If intMaxEleves < intNbEleves Then intMaxEleves = intNbEleves
+                .Columns(intColonne).ColumnWidth = 40
+                With .Cells(1, intColonne)
+                    .Borders.ColorIndex = 1
+                    .Borders.LineStyle = xlContinuous
+                    .Borders.Weight = xlMedium
+                    .Interior.ColorIndex = intColorClasse
+                    .Value = Worksheets(strPage1).Cells(12 + intIndiceClasse, 6).Value
+                    .HorizontalAlignment = xlHAlignCenter
+                    .VerticalAlignment = xlVAlignCenter
+                    .Locked = True
+                End With
+                With .Range(.Cells(intLigListePage2 + 1, intColonne), .Cells(intLigListePage2 + intNbEleves, intColonne))
+                    .Borders.ColorIndex = 1
+                    .Borders.LineStyle = xlContinuous
+                    .Borders.Weight = xlThin
+                    .VerticalAlignment = xlVAlignCenter
+                    .Locked = False
+                End With
+            Else
+                ' *** FORMATAGE COLONNE PAIRE ***
+                .Columns(intColonne).ColumnWidth = 5
+            End If
+        Next intColonne
+        
+        .Columns(intColonne).ColumnWidth = 30
+        
+        ' *** CREATION BOUTON 'CREER TABLEAUX' ***
+        Set rngBouton = .Cells(intLigListePage2, intColonne)
+        Set btnBouton = .Buttons.Add(rngBouton.Left, rngBouton.Top, rngBouton.Width, rngBouton.Height)
+        With btnBouton
+            .Caption = "Modifier listes"
+            .OnAction = "btnModifierListe_Click"
+        End With
+        
+        ' *** CREATION BOUTON 'CREER TABLEAUX' ***
+        Set rngBouton = .Cells(intLigListePage2 + 2, intColonne)
+        Set btnBouton = .Buttons.Add(rngBouton.Left, rngBouton.Top, rngBouton.Width, rngBouton.Height)
+        With btnBouton
+            .Caption = "Créer Tableaux"
+            .OnAction = "btnCreerTableaux_Click"
+        End With
+        With .Cells(intLigListePage2 + 3, intColonne)
+            .Value = "Après avoir rempli les listes"
+            .Interior.ColorIndex = 3
+            .Borders.ColorIndex = xlColorIndexAutomatic
+            .Borders.LineStyle = xlContinuous
+            .Borders.Weight = xlThin
+            .HorizontalAlignment = xlHAlignCenter
+            .VerticalAlignment = xlVAlignCenter
+        End With
     End With
-    With Cells(2, intColonne)
-        .Value = "Après avoir rempli les listes"
-        .Interior.ColorIndex = 3
-        .Borders.ColorIndex = xlColorIndexAutomatic
-        .Borders.LineStyle = xlContinuous
-        .Borders.Weight = xlThin
-        .HorizontalAlignment = xlHAlignCenter
-        .VerticalAlignment = xlVAlignCenter
-    End With
     
-    Set rngBouton = Nothing
-    Set btnBouton = Nothing
-    
-    ' Protection page
-    With Sheets(strPage2)
-        .EnableSelection = xlUnlockedCells
-        .Protect strPassword
-    End With
+    ' *** LIMITATION ZONE SCROLL ***
+'    With Worksheets(strPage2)
+'        .ScrollArea = .Range(.Cells("A1"), .Cells(intLigListePage2 + intMaxEleves + 5, 2 * intNbClasses + 2))
+'    End With
+
+    ' *** PROTECTION + REFRESH ECRAN ON ***
+    protectWorksheet
+    protectWorkbook
     Application.ScreenUpdating = True
     
-    
+End Sub
+
+Sub btnModifierListe_Click()
+    UserForm1.Show
 End Sub
 
 ' *** Origine: bouton "Créer Tableaux"
 ' *** Action: crée la feuille de listes de classes et tous les tableaux 'Classes' et 'Eval'
 Sub btnCreerTableaux_Click()
-    Dim intNombreClasses As Integer, intIndiceClasse As Integer
-    Dim intNombreEleves As Integer
-    Dim intAvancementActuel As Integer, intAvancementTotal As Integer
-    
-    intNombreClasses = getNombreClasses
-    intAvancementActuel = 0
-    intAvancementTotal = 2 * intNombreClasse
-    
-    ' Confirmation
-    If MsgBox("Êtes-vous sûr(e) de valider ces listes ? Vous pourrez toujours ajouter des élèves mais il sera impossible de recréer les tableaux.", vbYesNo) = vbYes Then
-        
-        ' Modification de l'affichage
-        UserForm5.Show vbModeless
-        Application.ScreenUpdating = False
-    
-        ' Creation des pages 'Notes' et 'Bilan'
-        For intIndiceClasse = 1 To intNombreClasses
-            intNombreEleves = getNombreEleves(intIndiceClasse)
-            
-            ' Ajout du tableau des évaluations + actualisation du chargement
-            creerTableauNotes intIndiceClasse, intNombreEleves
-            intAvancementActuel = intAvancementActuel + 1
-            UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
-            
-            ' Ajout du tableau bilan + actualisation du chargement
-            creerTableauBilan intIndiceClasse, intNombreEleves
-            intAvancementActuel = intAvancementActuel + 1
-            UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
-        Next intIndiceClasse
-        
-        ' Verouillage des listes
-        With Sheets(strPage2)
-            .Unprotect strPassword
-            .Buttons(.Buttons.Count).Delete
-            .Cells(2, 2 * intNombreClasses + 1).Delete xlShiftUp
-            .Cells.Locked = True
-            .EnableSelection = xlUnlockedCells
-            .Protect strPassword
-        End With
-        
-        UserForm5.Hide
-        Application.ScreenUpdating = True
-        
-        MsgBox ("Tableaux de notes et de bilan créés avec succès !")
-    Else
+    ' *** DEMANDE CONFIRMATION ***
+    If MsgBox("Êtes-vous sûr(e) de valider ces listes ? Vous pourrez toujours les modifier (ajout, suppression ou transfert d'élève) mais il sera impossible de les recréer intégralement.", vbYesNo) = vbNo Then
         MsgBox ("Opération annulée.")
-    End If
-    
-End Sub
-
-' Procédure d'ajout d'un élève
-Sub btnAjouterEleve_Click()
-    UserForm1.Show
-'    Dim intIndiceClasse As Integer, strNomClasse As String
-'    Dim intIndiceEleve As Integer, strNomEleve As String, strPrenomEleve As String, strNomComplet As String
-'
-'    ' Classe
-'    intIndiceClasse = WorksheetFunction.RoundUp(Val(Split(Application.Caller, " ")(1)) / 2, 0)
-'    strNomClasse = getNomClasse(intIndiceClasse)
-'
-'    ' Eleve
-'    strNomEleve = InputBox("Nom de l'élève à ajouter :")
-'    strPrenomEleve = InputBox("Prénom de l'élève à ajouter :")
-'    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
-'    intIndiceEleve = getIndiceEleve(strNomComplet, intIndiceClasse, False)
-'
-'    'Confirmation
-'    If MsgBox("Voulez vous ajouter l'élève '" & strNomComplet & "' à la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
-'        ajouterEleve intIndiceClasse, intIndiceEleve, strNomComplet
-'    Else
-'        MsgBox ("Opération annulée.")
-'    End If
-
-End Sub
-
-Sub ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomComplet As String)
-    Dim strNomClasse As String
-    Dim strPage3 As String, strPage4 As String
-    Dim intNombreCompetences As Integer
-    Dim intNombreEleves As Integer
-    Dim intNombreEval As Integer
-    
-    ' Données initiales
-    strNomClasse = getNomClasse(intIndiceClasse)
-    strPage3 = "Notes (" & strNomClasse & ")"
-    strPage4 = "Bilan (" & strNomClasse & ")"
-    intNombreCompetences = getNombreCompetences
-    intNombreEleves = getNombreEleves(strNomClasse)
-    
-    If Not (intIndiceEleve > 0 And intIndiceEleve <= intNombreEleves + 1) Then
-        MsgBox ("L'indice de l'élève n'est pas compris dans la classe. Opération annulée")
         Exit Sub
     End If
     
+    ' *** DECLARATION VARIABLES ***
+    Dim intNbClasses As Integer
+    Dim intIndiceClasse As Integer
+    Dim intNbEleves As Integer
+    Dim intAvancementActuel As Integer
+    Dim intAvancementTotal As Integer
+    
+    ' *** PROTECTION + REFRESH ECRAN OFF ***
+    UserForm5.Show vbModeless
     Application.ScreenUpdating = False
+    unprotectWorksheet
+    unprotectWorkbook
     
-    ' Ajout page 1 (accueil)
-    Sheets(strPage1).Unprotect strPassword
-    Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreEleves + 1
-    Sheets(strPage1).Protect strPassword
+    ' *** AFFECTATION VARIABLES ***
+    intNbClasses = getNombreClasses
+    intAvancementActuel = 0
+    intAvancementTotal = 2 * intNbClasses
     
-    ' Ajout page 2 (liste)
-    With Sheets(strPage2)
-        .Unprotect strPassword
-        If intIndiceEleve > 2 And intIndiceEleve < intNombreEleves + 1 Then
-            .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromLeftOrAbove
-        ElseIf intIndiceEleve = intNombreEleves + 1 Then
-            .Cells(3 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromLeftOrAbove
-            .Cells(3 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Value = .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Value
-        Else
-            .Cells(3 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromRightOrBelow
-            .Cells(3 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Value = .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Value
-        End If
-        .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = strNomComplet
+    ' *** AJOUT PAGE 3 + PAGE 4 ***
+    For intIndiceClasse = 1 To intNbClasses
+        intNbEleves = getNombreEleves(intIndiceClasse)
+        
+        ' *** AJOUT PAGE 3 + MAJ CHARGEMENT ***
+        creerTableauNotes intIndiceClasse, intNbEleves
+        intAvancementActuel = intAvancementActuel + 1
+        UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
+        
+        ' *** AJOUT PAGE 4 + MAJ CHARGEMENT ***
+        creerTableauBilan intIndiceClasse, intNbEleves
+        intAvancementActuel = intAvancementActuel + 1
+        UserForm5.updateAvancement intAvancementActuel, intAvancementTotal
+    Next intIndiceClasse
+    
+    ' *** FORMATAGE PAGE 2 ***
+    With Worksheets(strPage2)
+        .Buttons(.Buttons.Count).Delete
+        .Cells(intLigListePage2 + 3, 2 * intNbClasses + 1).Delete xlShiftUp
         .Cells.Locked = True
-        .EnableSelection = xlUnlockedCells
-        .Protect strPassword
     End With
     
-    If Sheets.Count > 3 Then
-        intNombreEval = Sheets(strPage3).Buttons.Count - 1
-        ' Ajout page 3 (notes)
-        With Sheets(strPage3)
-            .Unprotect strPassword
-            If intIndiceEleve > 2 And intIndiceEleve < intNombreEleves + 1 Then
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Insert xlDown, xlFormatFromLeftOrAbove
-            ElseIf intIndiceEleve = intNombreEleves + 1 Then
-                .Range(.Cells(5 + intIndiceEleve - 1, 1), .Cells(5 + intIndiceEleve - 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Insert xlDown, xlFormatFromLeftOrAbove
-                .Range(.Cells(5 + intIndiceEleve - 1, 1), .Cells(5 + intIndiceEleve - 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Value = .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Value
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).ClearContents
-                .Range(.Cells(5 + intIndiceEleve - 1, 1), .Cells(5 + intIndiceEleve - 1, 2)).MergeCells = True
-            Else
-                .Range(.Cells(5 + intIndiceEleve + 1, 1), .Cells(5 + intIndiceEleve + 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Insert xlDown, xlFormatFromRightOrBelow
-                .Range(.Cells(5 + intIndiceEleve + 1, 1), .Cells(5 + intIndiceEleve + 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Value = .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Value
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).ClearContents
-                .Range(.Cells(5 + intIndiceEleve + 1, 1), .Cells(5 + intIndiceEleve + 1, 2)).MergeCells = True
-            End If
-            .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2)).MergeCells = True
-            .Cells(5 + intIndiceEleve, 1).Value = strNomComplet
-            .EnableSelection = xlUnlockedCells
-            .Protect strPassword
-        End With
-        
-        ' Ajout page 4 (résultats)
-        With Sheets(strPage4)
-            .Unprotect strPassword
-            If intIndiceEleve > 2 And intIndiceEleve < intNombreEleves + 1 Then
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Insert xlDown, xlFormatFromLeftOrAbove
-            ElseIf intIndiceEleve = intNombreEleves + 1 Then
-                .Range(.Cells(3 + intIndiceEleve - 1, 1), .Cells(3 + intIndiceEleve - 1, 1 + 4 * (intNombreCompetences + 1))).Insert xlDown, xlFormatFromLeftOrAbove
-                .Range(.Cells(3 + intIndiceEleve - 1, 1), .Cells(3 + intIndiceEleve - 1, 1 + 4 * (intNombreCompetences + 1))).Value = .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Value
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).ClearContents
-            Else
-                .Range(.Cells(3 + intIndiceEleve + 1, 1), .Cells(3 + intIndiceEleve + 1, 1 + 4 * (intNombreCompetences + 1))).Insert xlDown, xlFormatFromRightOrBelow
-                .Range(.Cells(3 + intIndiceEleve + 1, 1), .Cells(3 + intIndiceEleve + 1, 1 + 4 * (intNombreCompetences + 1))).Value = .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Value
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).ClearContents
-            End If
-            .Cells(3 + intIndiceEleve, 1).Value = strNomComplet
-            .EnableSelection = xlUnlockedCells
-            .Protect strPassword
-        End With
-    End If
-    
+    ' *** PROTECTION + REFRESH ECRAN ON ***
+    UserForm5.Hide
+    protectWorksheet
+    protectWorkbook
     Application.ScreenUpdating = True
     
-    MsgBox ("Élève ajouté !")
-    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox ("Tableaux 'Notes' et 'Bilan' créés avec succès !")
 End Sub
 
-Sub btnSupprimerEleve_Click()
-    UserForm2.Show
-'    Dim intIndiceClasse As Integer, strNomClasse As String
-'    Dim strNomEleve As String, strPrenomEleve As String, strNomComplet As String
-'
-'    ' Classe
-'    intIndiceClasse = WorksheetFunction.RoundUp(Val(Split(Application.Caller, " ")(1)) / 2, 0)
-'    strNomClasse = getNomClasse(intIndiceClasse)
-'
-'    ' Eleve
-'    strNomEleve = InputBox("Nom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
-'    strPrenomEleve = InputBox("Prénom de l'élève à supprimer (comme spécifié dans la liste, écrire en minuscule si accent) :")
-'    strNomComplet = StrConv(strNomEleve, vbUpperCase) & " " & StrConv(strPrenomEleve, vbProperCase)
-'
-'    'Confirmation
-'    If MsgBox("Voulez vous supprimer l'élève '" & strNomComplet & "' de la classe '" & strNomClasse & "' ?", vbYesNo) = vbYes Then
-'        If getIndiceEleve(strNomComplet, intIndiceClasse, True) <> -1 Then
-'            supprimerEleve intIndiceClasse, strNomComplet
-'            MsgBox ("Élève supprimé avec succès.")
-'        Else
-'            MsgBox ("L'élève '" & strNomComplet & "' n'a pas été trouvé dans la classe " & strNomClasse & ". Vérifiez l'orthographe.")
-'        End If
-'    Else
-'        MsgBox ("Opération annulée.")
-'    End If
+Sub ajouterEleve(intIndiceClasse As Integer, intIndiceEleve As Integer, strNomComplet As String)
+    ' *** DECLARATION VARIABLES ***
+    Dim strNomClasse As String              ' Nom de la classe d'ajout
+    Dim strPage3 As String                  ' Nom de la page "Notes" liée à la classe
+    Dim strPage4 As String                  ' Nom de la page "Bilan" liée à la classe
+    Dim intNbCompetences As Integer         ' Nombre de compétences pour le Workbook
+    Dim intNbEleves As Integer              ' Nombre d'élèves de la classe
+    Dim intNbEval As Integer                ' Nombre d'éval de la classe
 
-End Sub
-
-Sub supprimerEleve(intIndiceClasse As Integer, strNomComplet As String)
-    Dim intIndiceEleve As Integer
-    intIndiceEleve = getIndiceEleve(strNomComplet, intIndiceClasse, True)
-    If intIndiceEleve = -1 Then Exit Sub
-    
-    Dim strNomClasse As String
-    Dim strPage3 As String, strPage4 As String
-    Dim intNombreDomaines As Integer, intNombreCompetences As Integer
-    Dim intNombreEleves As Integer
-    Dim intNombreEval As Integer
-    
-    ' Données initiales
-    strNomClasse = getNomClasse(intIndiceClasse)
-    strPage3 = "Notes (" & strNomClasse & ")"
-    strPage4 = "Bilan (" & strNomClasse & ")"
-    intNombreDomaines = getNombreDomaines
-    intNombreCompetences = getNombreCompetences
-    intNombreEleves = getNombreEleves(strNomClasse)
-    
+    ' *** PROTECTION + REFRESH ECRAN OFF ***
     Application.ScreenUpdating = False
-    
-    ' Modification Page 1
-    Sheets(strPage1).Unprotect strPassword
-    Sheets(strPage1).Cells(12 + intIndiceClasse, 7).Value = intNombreEleves - 1
-    Sheets(strPage1).Protect strPassword
-    
-    ' Modification Page 2
-    With Sheets(strPage2)
-        .Unprotect strPassword
-        If intIndiceEleve > 1 And intIndiceEleve < intNombreEleves Then
-            .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Delete xlShiftUp
-        ElseIf intIndiceEleve = intNombreEleves Then
-            .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = .Cells(3 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Value
-            .Cells(3 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Delete xlShiftUp
-        Else
-            .Cells(3 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = .Cells(3 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Value
-            .Cells(3 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Delete xlShiftUp
-        End If
+    unprotectWorksheet intIndiceClasse
+
+    ' *** MODIFICATION PAGE 1 - ACCUEIL ***
+    intNbEleves = getNombreEleves(intIndiceClasse)
+    setNombreEleves intIndiceClasse, intNbEleves + 1
+
+    ' *** MODIFICATION PAGE 2 - LISTE ***
+    With Worksheets(strPage2)
+        Select Case intIndiceEleve
+        Case Is = 1                     ' Cas 1: élève en début de liste
+            .Cells(intLigListePage2 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromRightOrBelow
+            .Cells(intLigListePage2 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Value = .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Value
+        Case 2 To intNbEleves           ' Cas 2: élève au milieu de la liste
+            .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromLeftOrAbove
+        Case Is = intNbEleves + 1       ' Cas 3: élève en fin de liste
+            .Cells(intLigListePage2 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Insert xlShiftDown, xlFormatFromLeftOrAbove
+            .Cells(intLigListePage2 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Value = .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Value
+        End Select
+        .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = strNomComplet
         .Cells.Locked = True
-        .EnableSelection = xlUnlockedCells
-        .Protect strPassword
     End With
-    
-    If Sheets.Count > 3 Then
-        intNombreEval = Sheets(strPage3).Buttons.Count - 1
-        ' Modification Page 3 (notes)
-        With Sheets(strPage3)
-            .Unprotect strPassword
-            If intIndiceEleve > 1 And intIndiceEleve < intNombreEleves Then
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Delete xlShiftUp
-            ElseIf intIndiceEleve = intNombreEleves Then
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Value = .Range(.Cells(5 + intIndiceEleve - 1, 1), .Cells(5 + intIndiceEleve - 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Value
-                .Range(.Cells(5 + intIndiceEleve - 1, 1), .Cells(5 + intIndiceEleve - 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Delete xlShiftUp
-            Else
-                .Range(.Cells(5 + intIndiceEleve, 1), .Cells(5 + intIndiceEleve, 2 + (intNombreCompetences + 1) * intNombreEval)).Value = .Range(.Cells(5 + intIndiceEleve + 1, 1), .Cells(5 + intIndiceEleve + 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Value
-                .Range(.Cells(5 + intIndiceEleve + 1, 1), .Cells(5 + intIndiceEleve + 1, 2 + (intNombreCompetences + 1) * intNombreEval)).Delete xlShiftUp
-            End If
-            .EnableSelection = xlUnlockedCells
-            .Protect strPassword
-        End With
+
+    If Worksheets.Count > 3 Then
+        ' *** AFFECTATION VARIABLES ***
+        strNomClasse = getNomClasse(intIndiceClasse)
+        strPage3 = "Notes (" & strNomClasse & ")"
+        strPage4 = "Bilan (" & strNomClasse & ")"
+        intNbCompetences = getNombreCompetences
+        intNbEval = Worksheets(strPage3).Buttons.Count - 1
         
-        ' Modification Page 4 (résultats)
-        With Sheets(strPage4)
-            .Unprotect strPassword
-            If intIndiceEleve > 1 And intIndiceEleve < intNombreEleves Then
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Delete xlShiftUp
-            ElseIf intIndiceEleve = intNombreEleves Then
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Value = .Range(.Cells(3 + intIndiceEleve - 1, 1), .Cells(3 + intIndiceEleve - 1, 1 + 4 * (intNombreCompetences + 1))).Value
-                .Range(.Cells(3 + intIndiceEleve - 1, 1), .Cells(3 + intIndiceEleve - 1, 1 + 4 * (intNombreCompetences + 1))).Delete xlShiftUp
-            Else
-                .Range(.Cells(3 + intIndiceEleve, 1), .Cells(3 + intIndiceEleve, 1 + 4 * (intNombreCompetences + 1))).Value = .Range(.Cells(3 + intIndiceEleve + 1, 1), .Cells(3 + intIndiceEleve + 1, 1 + 4 * (intNombreCompetences + 1))).Value
-                .Range(.Cells(3 + intIndiceEleve + 1, 1), .Cells(3 + intIndiceEleve + 1, 1 + 4 * (intNombreCompetences + 1))).Delete xlShiftUp
-            End If
-            .EnableSelection = xlUnlockedCells
-            .Protect strPassword
+        ' *** MODIFICATION PAGE 3 - NOTES ***
+        With Worksheets(strPage3)
+            Select Case intIndiceEleve
+            Case Is = 1                     ' Cas 1: élève en début de liste
+                .Range(.Cells(intLigListePage3 + intIndiceEleve + 1, 1), .Cells(intLigListePage3 + intIndiceEleve + 1, 2 + (intNbCompetences + 1) * intNbEval)).Insert xlDown, xlFormatFromRightOrBelow
+                .Range(.Cells(intLigListePage3 + intIndiceEleve + 1, 1), .Cells(intLigListePage3 + intIndiceEleve + 1, 2)).MergeCells = True
+                .Range(.Cells(intLigListePage3 + intIndiceEleve + 1, 1), .Cells(intLigListePage3 + intIndiceEleve + 1, 2 + (intNbCompetences + 1) * intNbEval)).Value = .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Value
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).ClearContents
+            Case 2 To intNbEleves           ' Cas 2: élève au milieu de la liste
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Insert xlDown, xlFormatFromLeftOrAbove
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2)).MergeCells = True
+                .Cells(intLigListePage3 + intIndiceEleve, 1).Value = strNomComplet
+            Case Is = intNbEleves + 1       ' Cas 3: élève en fin de liste
+                .Range(.Cells(intLigListePage3 + intIndiceEleve - 1, 1), .Cells(intLigListePage3 + intIndiceEleve - 1, 2 + (intNbCompetences + 1) * intNbEval)).Insert xlDown, xlFormatFromLeftOrAbove
+                .Range(.Cells(intLigListePage3 + intIndiceEleve - 1, 1), .Cells(intLigListePage3 + intIndiceEleve - 1, 2)).MergeCells = True
+                .Range(.Cells(intLigListePage3 + intIndiceEleve - 1, 1), .Cells(intLigListePage3 + intIndiceEleve - 1, 2 + (intNbCompetences + 1) * intNbEval)).Value = .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Value
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).ClearContents
+            End Select
+            .Cells(intLigListePage3 + intIndiceEleve, 1).Value = strNomComplet
+        End With
+
+        ' *** MODIFICATION PAGE 4 - BILAN ***
+        With Worksheets(strPage4)
+            Select Case intIndiceEleve
+            Case Is = 1                     ' Cas 1: élève en début de liste
+                .Range(.Cells(intLigListePage4 + intIndiceEleve + 1, 1), .Cells(intLigListePage4 + intIndiceEleve + 1, 1 + 4 * (intNbCompetences + 1))).Insert xlDown, xlFormatFromRightOrBelow
+                .Range(.Cells(intLigListePage4 + intIndiceEleve + 1, 1), .Cells(intLigListePage4 + intIndiceEleve + 1, 1 + 4 * (intNbCompetences + 1))).Value = .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).Value
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).ClearContents
+            Case 2 To intNbEleves           ' Cas 2: élève au milieu de la liste
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).Insert xlDown, xlFormatFromLeftOrAbove
+            Case Is = intNbEleves + 1       ' Cas 3: élève en fin de liste
+                .Range(.Cells(intLigListePage4 + intIndiceEleve - 1, 1), .Cells(intLigListePage4 + intIndiceEleve - 1, 1 + 4 * (intNbCompetences + 1))).Insert xlDown, xlFormatFromLeftOrAbove
+                .Range(.Cells(intLigListePage4 + intIndiceEleve - 1, 1), .Cells(intLigListePage4 + intIndiceEleve - 1, 1 + 4 * (intNbCompetences + 1))).Value = .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).Value
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).ClearContents
+            End Select
+            .Cells(intLigListePage4 + intIndiceEleve, 1).Value = strNomComplet
         End With
     End If
-    
+
+    ' *** PROTECTION + REFRESH ECRAN ON ***
+    protectWorksheet intIndiceClasse
     Application.ScreenUpdating = True
+    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox "Élève ajouté.", vbInformation, "Ajout d'élève"
 End Sub
 
+Sub supprimerEleve(intIndiceClasse As Integer, intIndiceEleve As Integer)
+    ' *** DECLARATION VARIABLES ***
+    Dim strNomClasse As String              ' Nom de la classe d'ajout
+    Dim strPage3 As String                  ' Nom de la page "Notes" liée à la classe
+    Dim strPage4 As String                  ' Nom de la page "Bilan" liée à la classe
+    Dim intNbCompetences As Integer         ' Nombre de compétences pour le Workbook
+    Dim intNbEleves As Integer              ' Nombre d'élèves de la classe
+    Dim intNbEval As Integer                ' Nombre d'éval de la classe
 
+    ' *** PROTECTION + REFRESH ECRAN OFF ***
+    Application.ScreenUpdating = False
+    unprotectWorksheet intIndiceClasse
+
+    ' *** MODIFICATION PAGE 1 - ACCUEIL ***
+    intNbEleves = getNombreEleves(intIndiceClasse)
+    setNombreEleves intIndiceClasse, intNbEleves - 1
+
+    ' *** MODIFICATION PAGE 2 - LISTE ***
+    With Worksheets(strPage2)
+        Select Case intIndiceEleve
+        Case Is = 1                         ' Cas 1: élève en début de liste
+            .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = .Cells(intLigListePage2 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Value
+            .Cells(intLigListePage2 + intIndiceEleve + 1, 2 * intIndiceClasse - 1).Delete xlShiftUp
+        Case 2 To intNbEleves - 1           ' Cas 2: élève au milieu de la liste (classique)
+            .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Delete xlShiftUp
+        Case Is = intNbEleves               ' Cas 3: élève en fin de liste
+            .Cells(intLigListePage2 + intIndiceEleve, 2 * intIndiceClasse - 1).Value = .Cells(intLigListePage2 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Value
+            .Cells(intLigListePage2 + intIndiceEleve - 1, 2 * intIndiceClasse - 1).Delete xlShiftUp
+        End Select
+        .Cells.Locked = True
+    End With
+
+    If Worksheets.Count > 3 Then
+        ' *** AFFECTATION VARIABLES ***
+        strNomClasse = getNomClasse(intIndiceClasse)
+        strPage3 = "Notes (" & strNomClasse & ")"
+        strPage4 = "Bilan (" & strNomClasse & ")"
+        intNbCompetences = getNombreCompetences
+        intNbEval = Worksheets(strPage3).Buttons.Count - 1
+
+        ' *** MODIFICATION PAGE 3 - NOTES ***
+        With Worksheets(strPage3)
+            Select Case intIndiceEleve
+            Case Is = 1                         ' Cas 1: élève en début de liste
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Value = .Range(.Cells(intLigListePage3 + intIndiceEleve + 1, 1), .Cells(intLigListePage3 + intIndiceEleve + 1, 2 + (intNbCompetences + 1) * intNbEval)).Value
+                .Range(.Cells(intLigListePage3 + intIndiceEleve + 1, 1), .Cells(intLigListePage3 + intIndiceEleve + 1, 2 + (intNbCompetences + 1) * intNbEval)).Delete xlShiftUp
+            Case 2 To intNbEleves - 1           ' Cas 2: élève au milieu de la liste (classique)
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Delete xlShiftUp
+            Case Is = intNbEleves               ' Cas 3: élève en fin de liste
+                .Range(.Cells(intLigListePage3 + intIndiceEleve, 1), .Cells(intLigListePage3 + intIndiceEleve, 2 + (intNbCompetences + 1) * intNbEval)).Value = .Range(.Cells(intLigListePage3 + intIndiceEleve - 1, 1), .Cells(intLigListePage3 + intIndiceEleve - 1, 2 + (intNbCompetences + 1) * intNbEval)).Value
+                .Range(.Cells(intLigListePage3 + intIndiceEleve - 1, 1), .Cells(intLigListePage3 + intIndiceEleve - 1, 2 + (intNbCompetences + 1) * intNbEval)).Delete xlShiftUp
+            End Select
+        End With
+
+        ' *** MODIFICATION PAGE 4 - BILAN ***
+        With Worksheets(strPage4)
+            Select Case intIndiceEleve
+            Case Is = 1                         ' Cas 1: élève en début de liste
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).Value = .Range(.Cells(intLigListePage4 + intIndiceEleve + 1, 1), .Cells(intLigListePage4 + intIndiceEleve + 1, 1 + 4 * (intNbCompetences + 1))).Value
+                .Range(.Cells(intLigListePage4 + intIndiceEleve + 1, 1), .Cells(intLigListePage4 + intIndiceEleve + 1, 1 + 4 * (intNbCompetences + 1))).Delete xlShiftUp
+            Case 2 To intNbEleves - 1           ' Cas 2: élève au milieu de la liste (classique)
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + (intNbCompetences + 1) * 4)).Delete xlShiftUp
+            Case Is = intNbEleves               ' Cas 3: élève en fin de liste
+                .Range(.Cells(intLigListePage4 + intIndiceEleve, 1), .Cells(intLigListePage4 + intIndiceEleve, 1 + 4 * (intNbCompetences + 1))).Value = .Range(.Cells(intLigListePage4 + intIndiceEleve - 1, 1), .Cells(intLigListePage4 + intIndiceEleve - 1, 1 + 4 * (intNbCompetences + 1))).Value
+                .Range(.Cells(intLigListePage4 + intIndiceEleve - 1, 1), .Cells(intLigListePage4 + intIndiceEleve - 1, 1 + 4 * (intNbCompetences + 1))).Delete xlShiftUp
+            End Select
+        End With
+    End If
+
+    ' *** PROTECTION + REFRESH ECRAN ON ***
+    protectWorksheet intIndiceClasse
+    Application.ScreenUpdating = True
+    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox "Élève supprimé.", vbInformation, "Suppression d'élève"
+End Sub
+
+' Procédure en 3 opérations:
+' 1: Ajout de l'élève dans la classe de destination
+' 2: Copie des notes de l'ancien emplacement (classe source) vers le nouveau (classe dest)
+' 3: Suppression de l'élève dans la classe source
+
+Sub transfererEleve(intIndiceClasseSource As Integer, intIndiceEleveSource As Integer, intIndiceClasseDest As Integer, intIndiceEleveDest As Integer, strNomComplet As String)
+     ' *** OPERATION 1 : AJOUT DANS NOUVELLE CLASSE ***
+     ajouterEleve intIndiceClasseDest, intIndiceEleveDest, strNomComplet
+    
+     ' *** OPERATION 2 : COPIE NOTES ***
+     ' copierNotesEleve intIndiceClasseSource, intIndiceEleveSource, intIndiceClasseDest, intIndiceEleveDest
+    
+     ' *** OPERATION 3 : SUPPRESSION DANS ANCIENNE CLASSE ***
+     supprimerEleve intIndiceClasseSource, intIndiceEleveSource
+    
+End Sub
+
+'Sub copierNotesEleve(intIndiceClasseSource As Integer, intIndiceEleveSource As Integer, intIndiceClasseDest As Integer, intIndiceEleveDest As Integer)
+'    ' *** DECLARATION VARIABLES ***
+'    Dim ws3Source As Worksheet
+'    Dim ws3Dest As Worksheet
+'    Dim ws4Source As Worksheet
+'    Dim ws4Dest As Worksheet
+'    Dim intNbEvalSource As Integer
+'    Dim intNbEvalDest As Integer
+'    Dim intNbDomaines As Integer
+'    Dim intSommeCompetences As Integer
+'
+'    ' *** PROTECTION + REFRESH ECRAN OFF ***
+'    Application.ScreenUpdating = False
+'    unprotectWorksheet
+'
+'    ' *** AFFECTATION VARIABLES ***
+'    Set ws3Source = Worksheets(getNomPage3(intIndiceClasseSource))
+'    Set ws3Dest = Worksheets(getNomPage3(intIndiceClasseDest))
+'    Set ws4Source = Worksheets(getNomPage4(intIndiceClasseSource))
+'    Set ws4Dest = Worksheets(getNomPage4(intIndiceClasseDest))
+'    intNbEvalSource = getNombreEvals(intIndiceClasseSource)
+'
+'    ' *** COPIE DES NOTES ***
+'    Worksheets (ws3Dest.Name)
+'
+'    MsgBox "Copie des notes de l'élève"
+'
+'    ' *** PROTECTION + REFRESH ECRAN ON ***
+'    protectWorksheet
+'    Application.ScreenUpdating = True
+'End Sub
+'
+'
+'

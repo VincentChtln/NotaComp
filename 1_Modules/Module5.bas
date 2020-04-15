@@ -5,22 +5,23 @@ Attribute VB_Name = "Module5"
 
 Option Explicit
 
-' **********************************
+' ##################################
 ' CONSTANTES
-' **********************************
+' ##################################
 Const strGitFolder1 As String = "C:\Users\Utilisateur\Documents\GitHub\OutilNotationCompetence\"
 Const strGitFolder2 As String = "C:\Users\vincent.chatelain\Documents\GitHub\NotaComp\"
 Const strWBSource As String = "Outil de gestion des notes_Dev.xlsm"
 
-' **********************************
+' ##################################
 ' FONCTIONS
-' **********************************
+' ##################################
 ' isWBOpen(strWBName As String) As Boolean
 ' isVBProjectProtected(wb As Workbook) As Boolean
 ' isFolderEmpty(strFolderPath As String) As Boolean
 ' properFolderPath(strFolderPath As String) As String
 ' properWBName(strFileName As String) As String
-' **********************************
+' getModulesFolder(strUserName As String) As String
+' ##################################
 
 Function isWBOpen(strWBName As String) As Boolean
     Dim wb As Workbook
@@ -65,68 +66,92 @@ Function getModulesFolder(strUserName As String) As String
     getModulesFolder = getModulesFolder & "1_Modules\"
 End Function
 
-' **********************************
+' ##################################
 ' PROCÉDURES
-' **********************************
+' ##################################
+' userDisplay()
+' updateVBProject()
+' exportModulesToFolder()
+' importModulesToVBProject()
+' deleteFilesInFolder(strFolderPath As String)
+' deleteModulesInVBProject(wb As Workbook)
+' ##################################
 
 Sub userDisplay()
     MsgBox "current user is " & Application.UserName
 End Sub
 
 Public Sub updateVBProject()
-    Call exportModulesToFolder
-    Call importModulesToVBProject
+    exportModulesToFolder
+    importModulesToVBProject
 End Sub
 
 Public Sub exportModulesToFolder()
-    Dim strModulesFolder As String, bValidFolder As Boolean
+    ' *** DECLARATION VARIABLES ***
     Dim strFileName As String
+    Dim strExportFolder As String
+    Dim bExportFolderOK As Boolean
     Dim FSO As New FileSystemObject
-    Dim cmpComponent As VBIDE.VBComponent
+    Dim cpnFile As VBIDE.VBComponent
 
-    ' Vérification des conditions d'export
+    ' *** VERIFICATION CONDITIONS EXPORT ***
     If isVBProjectProtected(Workbooks(strWBSource)) Then
         MsgBox ("Projet VB protégé, accès refusé.")
         Exit Sub
     End If
     
-    strModulesFolder = getModulesFolder(Application.UserName)
-    bValidFolder = False
-    While Not bValidFolder
-        If FSO.FolderExists(strModulesFolder) Then
-            bValidFolder = True
-            deleteModulesInFolder (strModulesFolder)
+    ' *** AFFECTATION VARIABLES ***
+    strExportFolder = getModulesFolder(Application.UserName)
+    bExportFolderOK = False
+    
+    ' *** SUPPRESSION MODULES DOSSIER DEST ***
+    Do
+        If FSO.FolderExists(strExportFolder) Then
+            If vbNo = MsgBox("Confirmation export des nouveaux modules ?", vbYesNo) Then GoTo Annulation
+            bExportFolderOK = True
         Else
-            MsgBox ("Le dossier indiqué '" & strModulesFolder & "' n'existe pas, opération annulée.")
-            Exit Sub
+            InputBox "Le dossier indiqué n'existe pas. Modifiez le chemin d'accès ou annulez l'export.", "Export folder path", strExportFolder
+            If Len(strExportFolder) = 0 Then GoTo Annulation
         End If
-    Wend
+    Loop Until bExportFolderOK
     
-    ' Export des modules
-    For Each cmpComponent In Workbooks(strWBSource).VBProject.VBComponents
-        If cmpComponent.Type = vbext_ct_StdModule Then
-            strFileName = cmpComponent.Name & ".bas"
-            cmpComponent.Export properFolderPath(strModulesFolder) & strFileName
-        ElseIf cmpComponent.Type = vbext_ct_MSForm Then
-            strFileName = cmpComponent.Name & ".frm"
-            cmpComponent.Export properFolderPath(strModulesFolder) & strFileName
+    ' *** SUPPRESSION ANCIENS MODULES ***
+    deleteFilesInFolder (strExportFolder)
+    
+    ' *** EXPORT MODULES ***
+    For Each cpnFile In Workbooks(strWBSource).VBProject.VBComponents
+        If cpnFile.Type = vbext_ct_StdModule Then
+            strFileName = cpnFile.Name & ".bas"
+            cpnFile.Export properFolderPath(strExportFolder) & strFileName
+        ElseIf cpnFile.Type = vbext_ct_MSForm Then
+            strFileName = cpnFile.Name & ".frm"
+            cpnFile.Export properFolderPath(strExportFolder) & strFileName
         End If
-    Next cmpComponent
+    Next cpnFile
     
-    MsgBox ("Export terminé.")
+    ' *** MESSAGE INFORMATION ***
+    MsgBox ("Export terminé avec succès.")
+    Exit Sub
+    
+    ' *** MESSAGE ANNULATION ***
+Annulation:
+    MsgBox ("Opération annulée.")
 End Sub
 
 Public Sub importModulesToVBProject()
+    ' *** DECLARATION VARIABLES ***
+    Dim bWBOK As Boolean
     Dim wbTarget As Workbook
-    Dim strWBFolder As String, strWBName As String
-    Dim strImportFolder As String, strImportModulePath As String
-    Dim bWBOK As Boolean, bImportFolderOK As Boolean
+    Dim strWBFolder As String
+    Dim strWBName As String
+    Dim strImportFolder As String
+    Dim bImportFolderOK As Boolean
+    Dim strImportFile As String
     Dim FSO As New FileSystemObject
-    Dim indexModule As Integer
     
-    ' Ouverture du WB
+    ' *** VERIFICATION WB + OUVERTURE ***
     bWBOK = False
-    While Not bWBOK
+    Do
         strWBName = properWBName(InputBox("Nom du classeur cible ?", "Nom du classeur", strWBName))
         If isWBOpen(strWBName) Then
             bWBOK = True
@@ -141,46 +166,44 @@ Public Sub importModulesToVBProject()
                 If vbCancel = MsgBox("Fichier non trouvé, vérifier l'orthographe", vbOKCancel) Then Exit Sub
             End If
         End If
-    Wend
+    Loop Until bWBOK
     Set wbTarget = Workbooks(strWBName)
     
-    ' Vérifie si le projet VB n'est pas protégé
+    ' *** VERFICATION PROTECTION VB_PROJECT ***
     If isVBProjectProtected(wbTarget) Then
-        MsgBox ("Projet VBA protégé, accès refusé. Opération annulée.")
-        Exit Sub
+        MsgBox ("Projet VBA protégé, accès refusé.")
+        GoTo Annulation
     End If
     
-    ' Vérifie le dossier d'import
+    ' *** VERIFICATION DOSSIER IMPORT ***
     bImportFolderOK = False
-    While Not bImportFolderOK
+    Do
         strImportFolder = properFolderPath(InputBox("Chemin vers le dossier de modules", vbOKCancel, getModulesFolder(Application.UserName)))
+        If Len(strImportFolder) = 0 Then GoTo Annulation
         If FSO.FolderExists(strImportFolder) Then
-            bImportFolderOK = True
             If isFolderEmpty(strImportFolder) Then
-                MsgBox ("Dossier vide, opération annulée.")
-                Exit Sub
+                MsgBox ("Dossier vide.")
+                GoTo Annulation
             End If
-        Else
-            If vbCancel = MsgBox("Dossier non trouvé, vérifier l'orthographe", vbOKCancel) Then Exit Sub
+            bImportFolderOK = True
         End If
-    Wend
+    Loop Until bImportFolderOK
     
-    ' Supprime les anciens modules
-    Call deleteModulesInVBProject(wbTarget)
+    ' *** SUPPRESSION ANCIENS MODULES ***
+    deleteModulesInVBProject wbTarget
     
-    ' Import les nouveaux modules
-    For indexModule = 1 To 4
-        strImportModulePath = strImportFolder & "Module" & indexModule & ".bas"
-        If FSO.FileExists(strImportModulePath) Then
-            wbTarget.VBProject.VBComponents.Import strImportModulePath
-        Else
-            MsgBox ("Import Module" & indexModule & ".bas échoué, fichier non trouvé.")
+    ' *** IMPORT NOUVEAUX MODULES ***
+    strImportFile = "Module1.bas"
+    Do Until Len(strImportFile) = 0
+        If Right(strImportFile, 4) = ".bas" Or Right(strImportFile, 4) = ".frm" Then
+            If strImportFile <> "Module5.bas" Then wbTarget.VBProject.VBComponents.Import strImportFolder & strImportFile
         End If
-    Next indexModule
+        strImportFile = Dir()
+    Loop
     
-    ' Modifie la date de dernière MAJ
+    ' *** MODIFICATION DATA MAJ ***
     Application.ScreenUpdating = False
-    With wbTarget.Sheets(strPage1)
+    With wbTarget.Worksheets(strPage1)
         .Unprotect strPassword
         .Range("G5").Value = strVersion
         .Range("G6").Value = Format(Now, "MM/dd/yyyy")      ' Affiche la date en format "dd/MM/yyyy"
@@ -188,57 +211,40 @@ Public Sub importModulesToVBProject()
     End With
     Application.ScreenUpdating = True
     
-    MsgBox ("Import terminé.")
-    Set wbTarget = Nothing
+    ' *** MESSAGE INFORMATION ***
+    MsgBox "Import terminé avec succès."
+    Exit Sub
+    
+    ' *** MESSAGE ANNULATION ***
+Annulation:
+    MsgBox "Opération annulée."
 End Sub
 
-Public Sub deleteModulesInFolder(strFolderPath As String)
-    Dim vbClean As Variant
+Public Sub deleteFilesInFolder(strFolderPath As String)
+    ' *** FORMATAGE CHEMIN DOSSIER ***
     strFolderPath = properFolderPath(strFolderPath)
     
-    ' Vérfication de la présence de modules & confirmation de suppression
-    If Not isFolderEmpty(strFolderPath) Then
-        vbClean = MsgBox("Voulez-vous supprimer tous les modules VBA du dossier '" & strFolderPath & "' ?", vbYesNoCancel, "Supprimer fichiers ?")
-    Else
-        MsgBox ("Aucun module VBA présent dans le dossier.")
-        Exit Sub
-    End If
+    ' *** SUPPRESSION FICHIERS DANS DOSSIER EXPORT ***
+    On Error Resume Next
+    Kill strFolderPath & "\*"   ' Suppression de tous les fichiers du dossier
+    On Error GoTo 0
     
-    ' Suppression / annulation
-    If vbClean = vbYes Then
-        On Error Resume Next
-        Kill strFolderPath & "\*.bas"
-        On Error GoTo 0
-        MsgBox ("Modules VBA supprimés.")
-    ElseIf vbClean = vbCancel Then
-        MsgBox ("Opération annulée.")
-        Exit Sub
-    End If
+    ' *** MESSAGE INFORMATION ***
+    MsgBox ("Fichiers VBA supprimés.")
 End Sub
 
 Public Sub deleteModulesInVBProject(wb As Workbook)
-    Dim cmpComponent As VBIDE.VBComponent
-    Dim vbClean As Variant
-
-    ' Vérfication de la présence de modules & confirmation de suppression
-    If Not isVBProjectProtected(wb) Then
-        vbClean = MsgBox("Voulez-vous supprimer tous les modules VBA du projet ?", vbYesNoCancel, "Supprimer modules ?")
-    Else
-        MsgBox ("Projet VBA protégé, accès refusé.")
-        Exit Sub
-    End If
+    ' *** DECLARATION VARIABLES ***
+    Dim cpnFile As VBIDE.VBComponent
     
-    ' Suppression / annulation
-    If vbClean = vbYes Then
-        For Each cmpComponent In wb.VBProject.VBComponents
-            If cmpComponent.Type = vbext_ct_StdModule Then
-                wb.VBProject.VBComponents.Remove cmpComponent
-            End If
-        Next cmpComponent
-        MsgBox ("Modules VBA supprimés.")
-    ElseIf vbClean = vbCancel Then
-        MsgBox ("Opération annulée.")
-        Exit Sub
-    End If
+    ' *** SUPPRESSION FICHIERS VBA ***
+    For Each cpnFile In wb.VBProject.VBComponents
+        If cpnFile.Type = vbext_ct_StdModule Or cpnFile.Type = vbext_ct_MSForm Then
+            wb.VBProject.VBComponents.Remove cpnFile
+        End If
+    Next cpnFile
+    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox ("Modules et UserForm VBA supprimés.")
 End Sub
 

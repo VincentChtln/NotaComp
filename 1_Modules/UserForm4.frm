@@ -19,92 +19,102 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
-' **********************************
+' ##################################
 ' PROCÉDURES
-' **********************************
+' ##################################
 ' UserForm_Initialize()
 ' listboxSelectionClasseSource_Change()
 ' btnTransfererEleve_Click()
-' **********************************
+' ##################################
 
 ' Initialisation de l'UF
 ' Peuplement de listboxSelectionClasseSource
 Private Sub UserForm_Initialize()
-    Dim intNombreClasse As Integer, intIndiceClasse As Integer, strNomClasse As String
+    ' *** DECLARATION VARIABLES ***
+    Dim intNbClasse As Integer
+    Dim intIndiceClasse As Integer
+    Dim strNomClasse As String
     
-    intNombreClasse = getNombreClasses()
+    ' *** AFFECTATION VARIABLES ***
+    intNbClasse = getNombreClasses()
     
-    For intIndiceClasse = 1 To intNombreClasse
+    ' *** AJOUT CLASSES DANS LISTE ***
+    For intIndiceClasse = 1 To intNbClasse
         strNomClasse = getNomClasse(intIndiceClasse)
         listboxSelectionClasseSource.AddItem strNomClasse
     Next intIndiceClasse
     
+    ' *** INITIALISATION INDEX ***
     listboxSelectionClasseSource.ListIndex = 0
 End Sub
 
 ' Modification de la liste Eleve en fonction de la classe sélectionnée
 Private Sub listboxSelectionClasseSource_Change()
+    ' *** DECLARATION VARIABLES ***
+    Dim intIndiceClasseSource As Integer
+    Dim intColonneClasseSource As Integer
+    Dim intNbEleves As Integer
+    Dim intIndiceEleve As Integer
+    Dim strNomCompletEleve As String
+    Dim intNbClasses As Integer
+    Dim intIndiceClasseDest As Integer
+    Dim strNomClasseDest As String
 
-    ' Peuplement de listboxSelectionEleve
-    Dim intIndiceClasseSource As Integer, intColonneClasseSource As Integer
-    Dim intNombreEleves As Integer, intIndiceEleve As Integer, strNomCompletEleve As String
-
+    ' *** AFFECTATION VARIABLES ***
     listboxSelectionEleve.Clear
+    listboxSelectionClasseDest.Clear
+    intNbEleves = getNombreEleves(intIndiceClasseSource)
+    intNbClasses = getNombreClasses()
     intIndiceClasseSource = listboxSelectionClasseSource.ListIndex + 1
     intColonneClasseSource = 2 * intIndiceClasseSource - 1
-    intNombreEleves = getNombreEleves(intIndiceClasseSource)
 
-    For intIndiceEleve = 1 To intNombreEleves
-        strNomCompletEleve = Cells(3 + intIndiceEleve, intColonneClasseSource).Value
+    ' *** AJOUT ELEVES DANS LISTE ***
+    For intIndiceEleve = 1 To intNbEleves
+        strNomCompletEleve = Worksheets(strPage2).Cells(intLigListePage2 + intIndiceEleve, intColonneClasseSource).Value
         listboxSelectionEleve.AddItem strNomCompletEleve
     Next intIndiceEleve
-
-    listboxSelectionEleve.ListIndex = 0
     
-    ' Peuplement de listboxSelectionClasseDest
-    Dim intNombreClasses As Integer
-    Dim intIndiceClasseDest As Integer, strNomClasseDest As String
-
-    listboxSelectionClasseDest.Clear
-
-    intNombreClasses = getNombreClasses()
-
-    For intIndiceClasseDest = 1 To intNombreClasses
+    ' *** AJOUT CLASSES DANS LISTE TRANSFERT ***
+    For intIndiceClasseDest = 1 To intNbClasses
         If intIndiceClasseDest <> intIndiceClasseSource Then
             strNomClasseDest = getNomClasse(intIndiceClasseDest)
             listboxSelectionClasseDest.AddItem strNomClasseDest
         End If
     Next intIndiceClasseDest
 
+    ' *** INITIALISATION INDEX ***
+    listboxSelectionEleve.ListIndex = 0
     listboxSelectionClasseDest.ListIndex = 0
-    
 End Sub
 
 ' Demande de confirmation puis appel de la procédure transfererEleve (Module 2)
 Private Sub btnTransfererEleve_Click()
-    Dim intClasseSource As Integer, strNomClasseSource As String
-    Dim intClasseDest As Integer, strNomClasseDest As String
-    Dim strNomCompletEleve As String, intEleveSource As Integer, intEleveDest As Integer
-    Dim obj As Object
+    ' *** DECLARATION VARIABLES ***
+    Dim intClasseSource As Integer
+    Dim strNomClasseSource As String
+    Dim intClasseDest As Integer
+    Dim strNomClasseDest As String
+    Dim strNomCompletEleve As String
+    Dim intEleveSource As Integer
+    Dim intEleveDest As Integer
 
-    ' Fermeture des UF
+    ' *** FERMETURE USERFORM ***
     unloadAllUserForms
     
-    ' Données classe source
+    ' *** AFFECTATION VARIABLES ***
     intClasseSource = 1 + listboxSelectionClasseSource.ListIndex
     strNomClasseSource = listboxSelectionClasseSource.Value
     intEleveSource = listboxSelectionEleve.ListIndex + 1
-
-    strNomCompletEleve = Cells(3 + intEleveSource, 2 * intClasseSource - 1)
-
-    ' Données classe dest
+    
+    strNomCompletEleve = Worksheets(strPage2).Cells(intLigListePage2 + intEleveSource, 2 * intClasseSource - 1)
+    
     intClasseDest = 1 + listboxSelectionClasseDest.ListIndex
     strNomClasseDest = listboxSelectionClasseDest.Value
     intEleveDest = getIndiceEleve(strNomCompletEleve, intClasseDest, False)
 
-    ' Confirmation de transfert
+    ' *** CONFIRMATION TRANSFERT ***
     If vbYes = MsgBox("Vous allez transférer '" & strNomCompletEleve & "' de la classe de '" & strNomClasseSource & "' vers la classe '" & strNomClasseDest & "'. Voulez-vous poursuivre ?", vbYesNo, "Confirmation de transfert") Then
-'        transfererEleve intClasseSource, intEleveSource, intClasseDest, intEleveDest
+        transfererEleve intClasseSource, intEleveSource, intClasseDest, intEleveDest
         MsgBox "Élève transféré."
     Else
         MsgBox "Operation annulée."
