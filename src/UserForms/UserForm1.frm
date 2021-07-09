@@ -18,12 +18,12 @@ Attribute VB_Exposed = False
 Option Explicit
 
 ' Procédure d'ajout d'un élève
-Private Sub btnAjouterEleve_Click()
+Private Sub BtnAjouterEleve_Click()
     UserForm2.Show
 End Sub
 
 ' Procédure de suppression d'un élève
-Private Sub btnSupprimerEleve_Click()
+Private Sub BtnSupprimerEleve_Click()
 
     ' *** MESSAGE ALERTE ***
     If vbCancel = MsgBox("ATTENTION: vous allez supprimer un élève d'une classe. Ses notes seront également perdues dans le processus." & vbNewLine & _
@@ -34,7 +34,7 @@ Private Sub btnSupprimerEleve_Click()
 End Sub
 
 ' Procédure de transfert d'un élève
-Private Sub btnTransfererEleve_Click()
+Private Sub BtnTransfererEleve_Click()
 
     ' *** MESSAGE ALERTE ***
     If vbCancel = MsgBox("ATTENTION: vous allez transférer un élève entre d'une classe vers une autre." & vbNewLine & _

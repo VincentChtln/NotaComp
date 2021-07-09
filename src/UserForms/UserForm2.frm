@@ -27,7 +27,7 @@ Option Explicit
 ' UserForm_Initialize()
 ' tbxNomEleve_Change()
 ' tbxPrenomEleve_Change()
-' btnAjouterEleve_Click()
+' BtnAjouterEleve_Click()
 ' *******************************************************************************
 
 ' Initialisation de l'UF
@@ -36,10 +36,10 @@ Private Sub UserForm_Initialize()
     Dim byClasse As Byte
     Dim strClasse As String
     
-    byNbClasses = getNombreClasses
+    byNbClasses = GetNombreClasses
     
     For byClasse = 1 To byNbClasses
-        strClasse = getNomClasse(byClasse)
+        strClasse = GetNomClasse(byClasse)
         lbxClasse.AddItem strClasse
     Next byClasse
     
@@ -47,29 +47,29 @@ Private Sub UserForm_Initialize()
 End Sub
 
 ' Mise en forme auto du nom de l'élève
-Private Sub tbxNomEleve_Change()
-    tbxNomEleve.Value = StrConv(tbxNomEleve.Value, vbUpperCase)
+Private Sub tbxEleve_Nom_Change()
+    tbxEleve_Nom.Value = StrConv(tbxEleve_Nom.Value, vbUpperCase)
 End Sub
 
 ' Mise en forme auto du prénom de l'élève
-Private Sub tbxPrenomEleve_Change()
-    tbxPrenomEleve.Value = StrConv(tbxPrenomEleve.Value, vbProperCase)
+Private Sub tbxEleve_Prenom_Change()
+    tbxEleve_Prenom.Value = StrConv(tbxEleve_Prenom.Value, vbProperCase)
 End Sub
 
 ' Demande de confirmation puis ajout d'un nouvel élève
-Private Sub btnAjouterEleve_Click()
+Private Sub BtnAjouterEleve_Click()
     Dim byClasse As Byte
     Dim strClasse As String
     Dim byEleve As Byte
     Dim strEleve As String
     
     byClasse = lbxClasse.ListIndex + 1
-    strClasse = getNomClasse(byClasse)
-    strEleve = tbxNomEleve.Value & " " & tbxPrenomEleve.Value
-    byEleve = getIndiceEleve(strEleve, byClasse, False)
+    strClasse = GetNomClasse(byClasse)
+    strEleve = tbxEleve_Nom.Value & " " & tbxEleve_Prenom.Value
+    byEleve = GetIndiceEleve(strEleve, byClasse, False)
     
     If vbYes = MsgBox("Vous êtes sur le point d'ajouter '" & strEleve & "' à la classe de " & strClasse & ". Voulez-vous poursuivre ?", vbYesNo, "Confirmation d'ajout") Then
-        ajouterEleve byClasse, byEleve, strEleve
+        AjouterEleve byClasse, byEleve, strEleve
         MsgBox "Élève ajouté"
     Else
         MsgBox "Operation annulée"

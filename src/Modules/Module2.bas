@@ -43,14 +43,23 @@ Attribute VB_Name = "Module2"
 
 ' *******************************************************************************
 '                               Module 2 - Listes
+' *******************************************************************************
 '
 '   Fonctions publiques
+'       GetIndiceEleve(ByVal strEleve As String, ByVal byClasse As Byte, ByVal bValeurExacte As Boolean) As Byte
 '
 '   Procédures publiques
+'       InitPage2()
+'       AjouterEleve(ByVal byClasse As Byte, ByVal byEleve As Byte, ByVal strEleve As String)
+'       SupprimerEleve(ByVal byClasse As Byte, ByVal byEleve As Byte)
+'       TransfererEleve(ByVal byClasseSource As Byte, ByVal byEleveSource As Byte, ByVal byClasseDest As Byte, ByVal byEleveDest As Byte, ByVal strEleve As String)
 '
 '   Fonctions privées
+'       IsListesOK() As Boolean
 '
 '   Procédures privées
+'       BtnValiderListes_Click()
+'       BtnModifierListes_Click()
 '
 ' *******************************************************************************
 
@@ -60,21 +69,21 @@ Option Explicit
 '                               Fonctions publiques
 ' *******************************************************************************
 
-Public Function getIndiceEleve(ByVal strEleve As String, ByVal byClasse As Byte, ByVal bValeurExacte As Boolean) As Byte
+Public Function GetIndiceEleve(ByVal strEleve As String, ByVal byClasse As Byte, ByVal bValeurExacte As Boolean) As Byte
     ' *** DECLARATION VARIABLES ***
     Dim byNbEleves As Byte
     Dim byEleve As Byte
     
     ' *** AFFECTATION VARIABLES ***
-    byNbEleves = getNombreEleves(byClasse)
-    getIndiceEleve = -1
+    byNbEleves = GetNombreEleves(byClasse)
+    GetIndiceEleve = -1
     
     With ThisWorkbook
         ' *** RECHERCHE INDICE EXACT ***
         If bValeurExacte Then
             For byEleve = 1 To byNbEleves
                 If StrComp(strEleve, .Worksheets(strPage2).Cells(byLigListePage2 + byEleve, 2 * byClasse - 1).Value) = 0 Then
-                    getIndiceEleve = byEleve
+                    GetIndiceEleve = byEleve
                     Exit For
                 End If
             Next byEleve
@@ -83,9 +92,9 @@ Public Function getIndiceEleve(ByVal strEleve As String, ByVal byClasse As Byte,
         Else
             For byEleve = 1 To byNbEleves
                 If StrComp(strEleve, .Worksheets(strPage2).Cells(byLigListePage2 + byEleve, 2 * byClasse - 1).Value) = -1 Then
-                    getIndiceEleve = byEleve
+                    GetIndiceEleve = byEleve
                     Exit For
-                ElseIf byEleve = byNbEleves Then getIndiceEleve = byNbEleves + 1
+                ElseIf byEleve = byNbEleves Then GetIndiceEleve = byNbEleves + 1
                 End If
             Next byEleve
         End If
@@ -95,7 +104,7 @@ End Function
 ' *******************************************************************************
 '                               Procédures publiques
 ' *******************************************************************************
-Public Sub creerTableauListeClasses()
+Public Sub InitPage2()
     ' *** DECLARATION VARIABLES ***
     Dim byClasse As Byte
     Dim byNbClasses As Byte
@@ -103,20 +112,19 @@ Public Sub creerTableauListeClasses()
     Dim byColClasse As Byte
     Dim arrNomClasse(1 To 1) As String
     Dim rngBtnValiderListes As Range
-    Dim btnValiderListes As Variant
     
     ' *** AFFECTATION VARIABLES ***
-    byNbClasses = getNombreClasses
+    byNbClasses = GetNombreClasses
         
     With ThisWorkbook.Worksheets(strPage2)
         For byClasse = 1 To byNbClasses
-            byNbEleves = getNombreEleves(byClasse)
+            byNbEleves = GetNombreEleves(byClasse)
             byColClasse = 2 * byClasse - 1
-            arrNomClasse(1) = getNomClasse(byClasse)
+            arrNomClasse(1) = GetNomClasse(byClasse)
             
-            creerTableau strNomWs:=strPage2, rngCelOrigine:=.Cells(byLigListePage2, byColClasse), _
-        iHaut:=byNbEleves + 1, iLarg:=1, iOrientation:=1, _
-        arrAttribut:=arrNomClasse, byCouleur:=byCouleurClasse, bLocked:=False
+            CreerTableau strNomWs:=strPage2, rngCelOrigine:=.Cells(byLigListePage2, byColClasse), _
+                         iHaut:=byNbEleves + 1, iLarg:=1, iOrientation:=1, _
+                         arrAttribut:=arrNomClasse, byCouleur:=byCouleurClasse, bLocked:=False
                          
             With .Range(.Cells(byLigListePage2 + 1, byColClasse), .Cells(byLigListePage2 + byNbEleves, byColClasse))
                 .HorizontalAlignment = xlHAlignLeft
@@ -130,57 +138,214 @@ Public Sub creerTableauListeClasses()
         With .Buttons.Add(rngBtnValiderListes.Left, rngBtnValiderListes.Top, _
                           rngBtnValiderListes.Width, rngBtnValiderListes.Height)
             .Caption = "Valider les listes"
-            .OnAction = "btnValiderListes_Click"
-            .Name = "btnValiderListes"
+            .OnAction = "BtnValiderListes_Click"
+            .Name = "BtnValiderListes"
         End With
     End With
     
     ' *** FORMATAGE PAGE ***
-    freezePanes ActiveWindow, byLigListePage2, 0
+    FreezePanes ActiveWindow, byLigListePage2, 0
 End Sub
 
-Public Sub ajouterEleve(ByVal byClasse As Byte, ByVal byEleve As Byte, ByVal strEleve As String)
-
+Public Sub AjouterEleve(ByVal byClasse As Byte, ByVal byEleve As Byte, ByVal strEleve As String)
+    ' *** DECLARATION VARIABLES ***
+    Dim byNbEleves As Byte
+    Dim byColClasse As Byte
+    Dim lColMax As Long
+    
+    ' *** AFFECTATION VARIABLES ***
+    byNbEleves = GetNombreEleves(byClasse)
+    byColClasse = 2 * byClasse - 1
+    
+    ' *** UPDATES OFF ***
+    DisableUpdates
+    
+    ' *** MODIFICATION PAGE 1 - ACCUEIL ***
+    SetNombreEleves byClasse, byNbEleves + 1
+    
+    ' *** MODIFICATION PAGE 2 - LISTES ***
+    With ThisWorkbook.Worksheets(strPage2)
+        Select Case byEleve
+        Case Is = 1                     ' Cas 1: élève en début de liste
+            .Cells(byLigListePage2 + byEleve + 1, byColClasse).Insert xlShiftDown, xlFormatFromRightOrBelow
+            .Cells(byLigListePage2 + byEleve + 1, byColClasse).Value = .Cells(byLigListePage2 + byEleve, byColClasse).Value
+        Case 2 To byNbEleves            ' Cas 2: élève au milieu de la liste
+            .Cells(byLigListePage2 + byEleve, byColClasse).Insert xlShiftDown, xlFormatFromLeftOrAbove
+        Case Is = byNbEleves + 1        ' Cas 3: élève en fin de liste
+            .Cells(byLigListePage2 + byEleve - 1, byColClasse).Insert xlShiftDown, xlFormatFromLeftOrAbove
+            .Cells(byLigListePage2 + byEleve - 1, byColClasse).Value = .Cells(byLigListePage2 + byEleve, byColClasse).Value
+        End Select
+        .Cells(byLigListePage2 + byEleve, byColClasse).Value = strEleve
+        .Cells.Locked = True
+    End With
+        
+    If ThisWorkbook.Worksheets.Count > 3 Then
+        ' *** MODIFICATION PAGE 3 - NOTES ***
+        With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
+            lColMax = .UsedRange.Columns.Count - 1
+            Select Case byEleve
+            Case 1
+                .Range(.Cells(byLigListePage3 + byEleve + 1, 1), .Cells(byLigListePage3 + byEleve + 1, lColMax)).Insert xlShiftDown, xlFormatFromRightOrBelow
+                .Range(.Cells(byLigListePage3 + byEleve + 1, 1), .Cells(byLigListePage3 + byEleve + 1, 2)).MergeCells = True
+                .Range(.Cells(byLigListePage3 + byEleve + 1, 1), .Cells(byLigListePage3 + byEleve + 1, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Value
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).ClearContents
+            Case 2 To byNbEleves
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Insert xlShiftDown, xlFormatFromLeftOrAbove
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).MergeCells = True
+            Case byNbEleves + 1
+                .Range(.Cells(byLigListePage3 + byEleve - 1, 1), .Cells(byLigListePage3 + byEleve - 1, lColMax)).Insert xlShiftDown, xlFormatFromRightOrBelow
+                .Range(.Cells(byLigListePage3 + byEleve - 1, 1), .Cells(byLigListePage3 + byEleve - 1, 2)).MergeCells = True
+                .Range(.Cells(byLigListePage3 + byEleve - 1, 1), .Cells(byLigListePage3 + byEleve - 1, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Value
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).ClearContents
+            End Select
+            .Cells(byLigListePage3 + byEleve, 1).Value = strEleve
+        End With
+        ' *** MODIFICATION PAGE 4 - BILAN ***
+        With ThisWorkbook.Worksheets(GetNomPage4(byClasse))
+            lColMax = .UsedRange.Columns.Count - 1
+            Select Case byEleve
+            Case 1
+                .Range(.Cells(byLigListePage4 + byEleve + 1, 1), .Cells(byLigListePage4 + byEleve + 1, lColMax)).Insert xlShiftDown, xlFormatFromRightOrBelow
+                .Range(.Cells(byLigListePage4 + byEleve + 1, 1), .Cells(byLigListePage4 + byEleve + 1, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Value
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).ClearContents
+            Case 2 To byNbEleves
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Insert xlShiftDown, xlFormatFromLeftOrAbove
+            Case byNbEleves + 1
+                .Range(.Cells(byLigListePage4 + byEleve - 1, 1), .Cells(byLigListePage4 + byEleve - 1, lColMax)).Insert xlShiftDown, xlFormatFromRightOrBelow
+                .Range(.Cells(byLigListePage4 + byEleve - 1, 1), .Cells(byLigListePage4 + byEleve - 1, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Value
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).ClearContents
+            End Select
+            .Cells(byLigListePage4 + byEleve, 1).Value = strEleve
+        End With
+    End If
+    
+    ' *** UPDATES ON ***
+    EnableUpdates
+    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox "Élève ajouté.", vbInformation, "Ajout d'élève"
+    
 End Sub
 
-Public Sub supprimerEleve(ByVal byClasse As Byte, ByVal byEleve As Byte)
-
+Public Sub SupprimerEleve(ByVal byClasse As Byte, ByVal byEleve As Byte)
+    
+    ' *** DECLARATION VARIABLES ***
+    Dim byNbEleves As Byte
+    Dim byColClasse As Byte
+    Dim lColMax As Long
+    
+    ' *** AFFECTATION VARIABLES ***
+    byNbEleves = GetNombreEleves(byClasse)
+    byColClasse = 2 * byClasse - 1
+    
+    ' *** UPDATES OFF ***
+    DisableUpdates
+    
+    ' *** MODIFICATION PAGE 1 - ACCUEIL ***
+    SetNombreEleves byClasse, byNbEleves - 1
+    
+    ' *** MODIFICATION PAGE 2 - LISTES ***
+    With ThisWorkbook.Worksheets(strPage2)
+        Select Case byEleve
+        Case Is = 1                     ' Cas 1: élève en début de liste
+            .Cells(byLigListePage2 + byEleve, byColClasse).Value = .Cells(byLigListePage2 + byEleve + 1, byColClasse).Value
+            .Cells(byLigListePage2 + byEleve + 1, byColClasse).Delete xlShiftUp
+        Case 2 To byNbEleves - 1        ' Cas 2: élève au milieu de la liste
+            .Cells(byLigListePage2 + byEleve, byColClasse).Delete xlShiftUp
+        Case Is = byNbEleves            ' Cas 3: élève en fin de liste
+            .Cells(byLigListePage2 + byEleve, byColClasse).Value = .Cells(byLigListePage2 + byEleve - 1, byColClasse).Value
+            .Cells(byLigListePage2 + byEleve - 1, byColClasse).Delete xlShiftUp
+        End Select
+        .Cells.Locked = True
+    End With
+        
+    If ThisWorkbook.Worksheets.Count > 3 Then
+        ' *** MODIFICATION PAGE 3 - NOTES ***
+        With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
+            lColMax = .UsedRange.Columns.Count - 1
+            Select Case byEleve
+            Case Is = 1                     ' Cas 1: élève en début de liste
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage3 + byEleve + 1, 1), .Cells(byLigListePage3 + byEleve + 1, lColMax)).Value
+                .Range(.Cells(byLigListePage3 + byEleve + 1, 1), .Cells(byLigListePage3 + byEleve + 1, lColMax)).Delete xlShiftUp
+            Case 2 To byNbEleves - 1        ' Cas 2: élève au milieu de la liste
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Delete xlShiftUp
+            Case Is = byNbEleves            ' Cas 3: élève en fin de liste
+                .Range(.Cells(byLigListePage3 + byEleve, 1), .Cells(byLigListePage3 + byEleve, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage3 + byEleve - 1, 1), .Cells(byLigListePage3 + byEleve - 1, lColMax)).Value
+                .Range(.Cells(byLigListePage3 + byEleve - 1, 1), .Cells(byLigListePage3 + byEleve - 1, lColMax)).Delete xlShiftUp
+            End Select
+        End With
+        ' *** MODIFICATION PAGE 4 - BILAN ***
+        With ThisWorkbook.Worksheets(GetNomPage4(byClasse))
+            lColMax = .UsedRange.Columns.Count - 1
+            Select Case byEleve
+            Case Is = 1                     ' Cas 1: élève en début de liste
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage4 + byEleve + 1, 1), .Cells(byLigListePage4 + byEleve + 1, lColMax)).Value
+                .Range(.Cells(byLigListePage4 + byEleve + 1, 1), .Cells(byLigListePage4 + byEleve + 1, lColMax)).Delete xlShiftUp
+            Case 2 To byNbEleves - 1        ' Cas 2: élève au milieu de la liste
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Delete xlShiftUp
+            Case Is = byNbEleves            ' Cas 3: élève en fin de liste
+                .Range(.Cells(byLigListePage4 + byEleve, 1), .Cells(byLigListePage4 + byEleve, lColMax)).Value = _
+                        .Range(.Cells(byLigListePage4 + byEleve - 1, 1), .Cells(byLigListePage4 + byEleve - 1, lColMax)).Value
+                .Range(.Cells(byLigListePage4 + byEleve - 1, 1), .Cells(byLigListePage4 + byEleve - 1, lColMax)).Delete xlShiftUp
+            End Select
+        End With
+    End If
+    
+    ' *** UPDATES ON ***
+    EnableUpdates
+    
+    ' *** MESSAGE INFORMATION ***
+    MsgBox "Élève supprimé.", vbInformation, "Suppression d'élève"
 End Sub
 
-Public Sub transfereEleve(ByVal byClasseSource As Byte, ByVal byEleveSource As Byte, ByVal byClasseDest As Byte, ByVal byEleveDest As Byte)
-
+Public Sub TransfererEleve(ByVal byClasseSource As Byte, ByVal byEleveSource As Byte, ByVal byClasseDest As Byte, ByVal byEleveDest As Byte, ByVal strEleve As String)
+     ' *** OPERATION 1 : AJOUT DANS NOUVELLE CLASSE ***
+     AjouterEleve byClasseDest, byEleveDest, strEleve
+     
+     ' Il n'y a pas de transfert de notes car rien ne garanti l'homogénéïté des évaluations entre plusieurs classes.
+    
+     ' *** OPERATION 2 : SUPPRESSION DANS ANCIENNE CLASSE ***
+     SupprimerEleve byClasseSource, byEleveSource
 End Sub
 
 ' *******************************************************************************
 '                               Fonctions privées
 ' *******************************************************************************
 
-Private Function isListesOK() As Boolean
+Private Function IsListesOK() As Boolean
     Dim byClasse As Byte
     Dim byNbClasses As Byte
     Dim byColClasse As Byte
     Dim byNbEleves As Byte
     
-    isListesOK = False
-    byNbClasses = getNombreClasses
+    IsListesOK = False
+    byNbClasses = GetNombreClasses
     
     With ThisWorkbook.Worksheets(strPage2)
         For byClasse = 1 To byNbClasses
             byColClasse = 2 * byClasse - 1
-            byNbEleves = getNombreEleves(byClasse)
+            byNbEleves = GetNombreEleves(byClasse)
             If Application.WorksheetFunction.CountA(.Range(.Cells(byLigListePage2 + 1, byColClasse), _
                                                            .Cells(byLigListePage2 + byNbEleves, byColClasse))) <> byNbEleves Then Exit Function
         Next byClasse
     End With
     
-    isListesOK = True
+    IsListesOK = True
 End Function
 
 ' *******************************************************************************
 '                               Procédures privées
 ' *******************************************************************************
 
-Private Sub btnValiderListes_Click()
+'@EntryPoint
+Private Sub BtnValiderListes_Click()
     Dim byClasse            As Byte
     Dim byNbEleves          As Byte
     Dim byNbClasses         As Byte
@@ -188,7 +353,7 @@ Private Sub btnValiderListes_Click()
     Dim byAvancementTotal   As Byte
     
     ' *** VERIFICATION LISTES VALIDES ***
-    If Not (isListesOK) Then
+    If Not (IsListesOK) Then
         MsgBox "Les listes de classes sont incomplètes. Merci de compléter tous les cases avant de passer à l'étape suivante." & vbNewLine & vbNewLine & _
                "INDICATION: si le nombre d'élève réel ne correspond pas au nombre de cases disponibles, complétez tout de même la totalité des listes " & _
                "et cliquez sur le bouton 'Valider les listes'. Un bouton 'Modifier les listes' apparaitra alors à la place du précédent, " & _
@@ -202,26 +367,26 @@ Private Sub btnValiderListes_Click()
 
     ' *** REFRESH ECRAN OFF ***
     UserForm5.Show vbModeless
-    unprotectWorkbook
-    disableUpdates
+    UnprotectWorkbook
+    DisableUpdates
     
     ' *** AFFECTATION VARIABLES ***
-    byNbClasses = getNombreClasses
+    byNbClasses = GetNombreClasses
     byAvancement = 0
     byAvancementTotal = 2 * byNbClasses
     
     For byClasse = 1 To byNbClasses
-        byNbEleves = getNombreEleves(byClasse)
+        byNbEleves = GetNombreEleves(byClasse)
         
         ' *** AJOUT PAGE 3 ***
-        addWorksheet (getNomPage3(byClasse))
-        initPage3 byClasse, byNbEleves
+        AddWorksheet (GetNomPage3(byClasse))
+        InitPage3 byClasse, byNbEleves
         byAvancement = byAvancement + 1
         UserForm5.updateAvancement byAvancement, byAvancementTotal
 
         ' *** AJOUT PAGE 4 ***
-        addWorksheet (getNomPage4(byClasse))
-        initPage4 byClasse, byNbEleves
+        AddWorksheet (GetNomPage4(byClasse))
+        InitPage4 byClasse, byNbEleves
         byAvancement = byAvancement + 1
         UserForm5.updateAvancement byAvancement, byAvancementTotal
     Next byClasse
@@ -229,11 +394,11 @@ Private Sub btnValiderListes_Click()
     ' *** MODIFICATION BOUTON ***
     With ThisWorkbook.Worksheets(strPage2)
         .Activate
-        '        With .Buttons("btnValiderListes")
+        '        With .Buttons("BtnValiderListes")
         '            .LockedText = False
         '            .Caption = "Modifier les listes"
-        '            .OnAction = "btnModifierListes_Click"
-        '            '.Name = "btnModifierListes"
+        '            .OnAction = "BtnModifierListes_Click"
+        '            '.Name = "BtnModifierListes"
         '        End With
     End With
     
@@ -241,17 +406,18 @@ Private Sub btnValiderListes_Click()
     ThisWorkbook.Worksheets(strPage2).Cells.Locked = True
     
     ' *** PROTECTION + REFRESH ECRAN ON ***
-    protectAllWorksheets
-    protectWorkbook
+    ProtectAllWorksheets
+    ProtectWorkbook
     Unload UserForm5
-    enableUpdates
+    EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
     MsgBox "Tableau 'Notes' et 'Bilan' créés avec succès !"
         
 End Sub
 
-Private Sub btnModifierListes_Click()
+'@EntryPoint
+Private Sub BtnModifierListes_Click()
     UserForm1.Show
 End Sub
 

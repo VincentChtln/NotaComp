@@ -41,16 +41,21 @@ Attribute VB_Name = "Module4"
 '
 ' *******************************************************************************
 
+
 ' *******************************************************************************
-'                               Module 2 - Listes
+'                               Module 4 - Bilan
+' *******************************************************************************
 '
 '   Fonctions publiques
 '
 '   Procédures publiques
+'       InitPage4(byClasse As Byte, byNbEleves As Byte)
 '
 '   Fonctions privées
 '
 '   Procédures privées
+'       BtnActualiserResultats_Click()
+'       CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
 '
 ' *******************************************************************************
 
@@ -60,20 +65,11 @@ Option Explicit
 '                               Fonctions publiques
 ' *******************************************************************************
 
-Sub test()
-    Const byClasse As Byte = 1
-    Dim byNbEleves As Byte
-    disableUpdates
-    byNbEleves = getNombreEleves(byClasse)
-    initPage4 byClasse, byNbEleves
-    enableUpdates
-End Sub
-
 ' *******************************************************************************
 '                               Procédures publiques
 ' *******************************************************************************
 
-Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
+Public Sub InitPage4(byClasse As Byte, byNbEleves As Byte)
     Dim wsPage2                     As Worksheet
     Dim wsPage4                     As Worksheet
     Dim rngBtnActualiserResultats   As Range
@@ -83,7 +79,7 @@ Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
     Dim byDomaine                   As Byte
     Dim byColArray                  As Byte
     
-    Set wsPage4 = ThisWorkbook.Worksheets(getNomPage4(byClasse))
+    Set wsPage4 = ThisWorkbook.Worksheets(GetNomPage4(byClasse))
     
     With wsPage4
         ' *** FORMATAGE LIGNES / COLONNES ***
@@ -97,13 +93,13 @@ Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
         With .Buttons.Add(rngBtnActualiserResultats.Left, rngBtnActualiserResultats.Top, _
                           rngBtnActualiserResultats.Width, rngBtnActualiserResultats.Height)
             .Caption = "Actualiser résultats"
-            .OnAction = "btnActualiserResultats_Click"
-            .Name = "btnActualiserResultats"
+            .OnAction = "BtnActualiserResultats_Click"
+            .Name = "BtnActualiserResultats"
         End With
         
         ' *** NOM CLASSE ***
         With .Range("A2")
-            .Value = getNomClasse(byClasse)
+            .Value = GetNomClasse(byClasse)
             .Interior.ColorIndex = byCouleurClasse
         End With
         .Range("A2:A3").MergeCells = True
@@ -118,8 +114,8 @@ Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
         End With
 
         ' *** EN-TETE ***
-        arrChoixCompet = getArrayChoixCompetences
-        arrDomaines = getArrayDomaines
+        arrChoixCompet = GetArrayChoixCompetences
+        arrDomaines = GetArrayDomaines
         ReDim arrTampon(1 To 3, 1 To 45)
         byColArray = 1
         
@@ -153,7 +149,7 @@ Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
                 arrTampon(2, byColArray) = "Moyenne"
                 byColArray = byColArray + 3
             ' *** AJOUT DOMAINE CHOISI ***
-            ElseIf getTailleArray(arrChoixCompet(byDomaine)) > 0 Then
+            ElseIf GetSizeOfArray(arrChoixCompet(byDomaine)) > 0 Then
                 .Range(.Cells(2, byColArray + 1), .Cells(2, byColArray + 4)).Interior.ColorIndex = byCouleurCompet_1
                 .Range(.Cells(byLigListePage4, byColArray + 4), .Cells(byLigListePage4 + byNbEleves, byColArray + 4)).Interior.ColorIndex = byCouleurCompet_2
                 arrTampon(2, byColArray) = arrDomaines(byDomaine, 2)
@@ -177,7 +173,7 @@ Public Sub initPage4(byClasse As Byte, byNbEleves As Byte)
     End With
 
     ' *** FIGEAGE VOLETS ***
-    freezePanes ActiveWindow, byLigListePage4, 1
+    FreezePanes ActiveWindow, byLigListePage4, 1
 End Sub
 
 ' *******************************************************************************
@@ -188,12 +184,10 @@ End Sub
 '                               Procédures privées
 ' *******************************************************************************
 
-Sub btnActualiserResultats_Click()
+'@EntryPoint
+Private Sub BtnActualiserResultats_Click()
     ' *** DECLARATION VARIABLES ***
     Dim byClasse            As Byte
-    Dim byDomaine           As Byte
-    Dim byNbDomaines        As Byte
-    Dim byTrimestre         As Byte
     Dim byEval              As Byte
     Dim byNbEvals           As Byte
     Dim sPage4              As String
@@ -202,45 +196,139 @@ Sub btnActualiserResultats_Click()
 
     ' *** AFFECTATION VARIABLES ***
     sPage4 = ActiveSheet.Name
-    byClasse = getIndiceClasse(sPage4)
-    byNbEvals = getNombreEvals(byClasse)
-    
-    iIndiceClasse = getIndiceClasse(ActiveSheet.Name)
-    iNbDomaines = getNombreDomaines
-    iNbEvals = getNombreEvals(intIndiceClasse)
+    byClasse = GetIndiceClasse(sPage4)
+    byNbEvals = GetNombreEvals(byClasse)
     
     ' *** USERFORM 5 - AFFICHAGE AVANCEMENT ***
-    iAvancementActuel = 0
-    iAvancementTotal = iNbEvals + 4 * iNbDomaines
+    byAvancementActuel = 0
+    byAvancementTotal = byNbEvals + 1
     UserForm5.Show vbModeless
 
     ' *** UPDATES OFF ***
-    disableUpdates
+    DisableUpdates
 
     ' *** RECALCUL NOTES EVAL ***
-    For iIndiceEval = 1 To iNbEvals
-        calculNote iIndiceClasse, iIndiceEval
-        iAvancementActuel = iAvancementActuel + 1
-        UserForm5.updateAvancement iAvancementActuel, iAvancementTotal
-    Next iIndiceEval
+    For byEval = 1 To byNbEvals
+        CalculNote byClasse, byEval
+        byAvancementActuel = byAvancementActuel + 1
+        UserForm5.updateAvancement byAvancementActuel, byAvancementTotal
+    Next byEval
     
     ' *** CALCUL MOYENNES PAR DOMAINE ET PAR TRIMESTRE ***
-    For iIndiceTrimestre = 1 To 4
-        For iIndiceDomaine = 1 To iNbDomaines
-            calculMoyenneDomaine iIndiceClasse, iIndiceDomaine, iIndiceTrimestre
-            iAvancementActuel = iAvancementActuel + 1
-            UserForm5.updateAvancement iAvancementActuel, iAvancementTotal
-        Next iIndiceDomaine
-        calculMoyenneGlobale iIndiceClasse, iIndiceTrimestre
-    Next iIndiceTrimestre
+    CalculMoyenneDomainesEtAnnee byClasse
+    byAvancementActuel = byAvancementActuel + 1
+    UserForm5.updateAvancement byAvancementActuel, byAvancementTotal
     
-    ' *** PROTECTION + REFRESH ECRAN ON ***
+    ' *** UPDATES ON ***
     UserForm5.Hide
-    protectWorksheet iIndiceClasse
-    Application.ScreenUpdating = True
+    EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
-    Worksheets(sPage4).Activate
+    ThisWorkbook.Worksheets(sPage4).Activate
     MsgBox ("Données mises à jour.")
 End Sub
+
+Private Sub CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
+    ' *** DECLARATION VARIABLES ***
+    Dim byIndiceDomaine     As Byte         '
+    Dim byNbDomaines        As Byte         '
+    Dim byEleve             As Byte         '
+    Dim byNbEleves          As Byte         '
+    Dim byTrimestre         As Byte         '
+    Dim bEvalOK             As Boolean      '
+    Dim dbCoeffEval         As Double       '
+    Dim dbCoeffCompet       As Double       '
+    Dim arrChoixDomaines    As Variant      '
+    Dim arrSource           As Variant      '
+    Dim arrDest             As Variant      '
+    Dim arrCoeff            As Variant      '
+    Dim lColSource          As Long         '
+    Dim lColDest            As Long         '
+    
+    ' *** AFFECTATION VARIABLES ***
+    byNbEleves = GetNombreEleves(byClasse)
+    With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
+        arrSource = .Range(.Cells(1, 3), .Cells(byLigListePage3 + byNbEleves, .UsedRange.Columns.Count - 1)).Value
+    End With
+    arrChoixDomaines = GetArrayChoixDomaines
+    byNbDomaines = GetSizeOfArray(arrChoixDomaines)
+    ReDim arrCoeff(1 To 4 * (byNbDomaines + 1))
+    For lColSource = 1 To UBound(arrCoeff, 1)
+        arrCoeff(lColSource) = 0#
+    Next lColSource
+    ReDim arrDest(1 To byNbEleves, 1 To 4 * (byNbDomaines + 1))
+    bEvalOK = False
+    
+    ' *** CALCUL SOMME NOTES & COEFFS ***
+    For lColSource = LBound(arrSource, 2) To UBound(arrSource, 2)
+    
+        ' *** VERIFICATION EVAL OK ***
+        If ((arrSource(2, lColSource) <> vbNullString) And (arrSource(3, lColSource) <> vbNullString)) Then
+            If IsNumeric(CInt(arrSource(2, lColSource))) And IsNumeric(CDbl(arrSource(3, lColSource))) Then
+                byTrimestre = CInt(arrSource(2, lColSource))
+                If (byTrimestre > 0) And (byTrimestre < 4) Then
+                    bEvalOK = True
+                    dbCoeffEval = CDbl(arrSource(3, lColSource))
+                End If
+            End If
+        End If
+        
+        ' *** AJOUT NOTES PONDEREES ***
+        If bEvalOK Then
+            If (arrSource(4, lColSource) = vbNullString) Then arrSource(4, lColSource) = arrSource(4, lColSource - 1)
+            
+            ' *** VERIFICATION COEFF / NOTE EVAL VALIDE ***
+            If (arrSource(byLigListePage3, lColSource) <> vbNullString) And IsNumeric(CDbl(arrSource(byLigListePage3, lColSource))) Then
+            
+                ' *** AJOUT COMPETENCE PONDEREE DANS DOMAINE ***
+                If (arrSource(4, lColSource) <> "Note / 20") Then
+                    byIndiceDomaine = CByte(GetIndexInArray(arrChoixDomaines, arrSource(4, lColSource)))
+                    
+                    ' *** VERIFICATION DOMAINE VALIDE (PAR SECURITE) ***
+                    If (byIndiceDomaine <> 0) Then
+                        dbCoeffCompet = CDbl(arrSource(byLigListePage3, lColSource))
+                        arrCoeff(4 * (byIndiceDomaine - 1) + byTrimestre) = arrCoeff(4 * (byIndiceDomaine - 1) + byTrimestre) + CDbl(arrSource(byLigListePage3, lColSource))
+                        arrCoeff(4 * byIndiceDomaine) = arrCoeff(4 * byIndiceDomaine) + CDbl(arrSource(byLigListePage3, lColSource))
+                        For byEleve = 1 To byNbEleves
+                            arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) = arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
+                            arrDest(byEleve, 4 * byIndiceDomaine) = arrDest(byEleve, 4 * byIndiceDomaine) + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
+                        Next byEleve
+                    End If
+                    
+                ' *** AJOUT MOYENNE PONDEREE DANS TRIMESTRE ***
+                Else
+                    arrCoeff(4 * byNbDomaines + byTrimestre) = arrCoeff(4 * byNbDomaines + byTrimestre) + dbCoeffEval
+                    arrCoeff(4 * (byNbDomaines + 1)) = arrCoeff(4 * (byNbDomaines + 1)) + dbCoeffEval
+                    For byEleve = 1 To byNbEleves
+                        arrDest(byEleve, 4 * byNbDomaines + byTrimestre) = arrDest(byEleve, 4 * byNbDomaines + byTrimestre) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
+                        arrDest(byEleve, 4 * (byNbDomaines + 1)) = arrDest(byEleve, 4 * (byNbDomaines + 1)) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
+                    Next byEleve
+                    bEvalOK = False
+                End If
+            End If
+        End If
+    Next lColSource
+    
+    ' *** CALCUL VALEURS FINALES ***
+    For lColDest = LBound(arrDest, 2) To UBound(arrDest, 2)
+        For byEleve = 1 To byNbEleves
+            If Not (IsEmpty(arrDest(byEleve, lColDest))) And Not (IsEmpty(arrCoeff(lColDest))) Then
+            
+                ' *** CALCUL MOYENNE DOMAINES ***
+                If lColDest <= 4 * byNbDomaines Then
+                    arrDest(byEleve, lColDest) = ConvertirValeurEnLettre(arrDest(byEleve, lColDest) / arrCoeff(lColDest))
+                    
+                ' *** CALCUL MOYENNE TRIMESTRE ***
+                Else
+                    arrDest(byEleve, lColDest) = arrDest(byEleve, lColDest) / arrCoeff(lColDest)
+                End If
+            End If
+        Next byEleve
+    Next lColDest
+    
+    With ThisWorkbook.Worksheets(GetNomPage4(byClasse))
+        .Range(.Cells(byLigListePage4 + 1, 2), .Cells(byLigListePage4 + byNbEleves, 1 + 4 * (byNbDomaines + 1))) = arrDest
+    End With
+End Sub
+
 

@@ -17,7 +17,7 @@ Attribute VB_Exposed = False
 
 Option Explicit
 
-Function limiterPourcentage(byValeur As Byte) As Byte
+Private Function limiterPourcentage(byValeur As Byte) As Byte
     limiterPourcentage = byValeur
     If limiterPourcentage < 0 Then
         limiterPourcentage = 0

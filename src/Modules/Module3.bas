@@ -42,15 +42,25 @@ Attribute VB_Name = "Module3"
 ' *******************************************************************************
 
 ' *******************************************************************************
-'                               Module 2 - Listes
+'                               Module 3 - Notes
+' *******************************************************************************
 '
 '   Fonctions publiques
+'       ConvertirLettreEnValeur(ByVal sLettre As String) As Byte
+'       ConvertirValeurEnLettre(ByVal dbValeur As Double) As String
+'       GetNombreEvals(ByVal byClasse As Byte) As Byte
 '
 '   Procédures publiques
+'       InitPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
+'       CalculNote(ByVal byClasse As Byte, ByVal byEval As Byte)
 '
 '   Fonctions privées
 '
 '   Procédures privées
+'       BtnAjouterEvaluation_Click()
+'       AjouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVal byColEval As Byte, ByRef arrCompetEval As Variant)
+'       BtnCalculNote_Click()
+'       BtnInfosNotation_Click()
 '
 ' *******************************************************************************
 
@@ -60,44 +70,44 @@ Option Explicit
 '                               Fonctions publiques
 ' *******************************************************************************
 
-Public Function convertLettreEnValeur(sLettre As String) As Byte
+Public Function ConvertirLettreEnValeur(ByVal sLettre As String) As Byte
     Dim byAsciiLettre As Byte
     byAsciiLettre = Asc(sLettre)
     If byAsciiLettre > 64 And byAsciiLettre < 70 Then
-        convertLettreEnValeur = 69 - byAsciiLettre
+        ConvertirLettreEnValeur = 69 - byAsciiLettre
     Else
-        convertLettreEnValeur = 0
+        ConvertirLettreEnValeur = 0
     End If
 End Function
 
-Public Function convertValeurEnLettre(dbValeur As Double) As String
+Public Function ConvertirValeurEnLettre(ByVal dbValeur As Double) As String
     If dbValeur >= 0 And dbValeur <= 4 Then
-        Select Case iValeur
-        Case Is > 3.5
-            convertValeurEnLettre = "A"
-        Case Is > 2.5
-            convertValeurEnLettre = "B"
-        Case Is > 1.5
-            convertValeurEnLettre = "C"
-        Case Is > 0
-            convertValeurEnLettre = "D"
+        Select Case dbValeur
+        Case Is > dblNoteA_Min
+            ConvertirValeurEnLettre = "A"
+        Case Is > dblNoteB_Min
+            ConvertirValeurEnLettre = "B"
+        Case Is > dblNoteC_Min
+            ConvertirValeurEnLettre = "C"
+        Case Is > dblNoteD_Min
+            ConvertirValeurEnLettre = "D"
         Case Is = 0
-            convertValeurEnLettre = "E"
+            ConvertirValeurEnLettre = "E"
         End Select
     Else
-        convertValeurEnLettre = "Z"
+        ConvertirValeurEnLettre = "Z"
     End If
 End Function
 
-Function getNombreEvals(byClasse As Byte) As Byte
-    getNombreEvals = ThisWorkbook.Worksheets(getNomPage3(byClasse)).Buttons.Count - 1
+Function GetNombreEvals(ByVal byClasse As Byte) As Byte
+    GetNombreEvals = ThisWorkbook.Worksheets(GetNomPage3(byClasse)).Buttons.Count - 2
 End Function
 
 ' *******************************************************************************
 '                               Procédures publiques
 ' *******************************************************************************
 
-Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
+Public Sub InitPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
     ' *** DECLARATION VARIABLES ***
     Dim byEleve                                     As Byte
     Dim rngBtnAjouterEval                           As Range
@@ -106,13 +116,13 @@ Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
     Dim wsPage3                                     As Worksheet
     Dim arrCompetEval                               As Variant
     
-    Set wsPage3 = ThisWorkbook.Worksheets(getNomPage3(byClasse))
+    Set wsPage3 = ThisWorkbook.Worksheets(GetNomPage3(byClasse))
     
     With wsPage3
         ' *** FORMATAGE TAILLE LIGNES + COLONNES ***
         .Rows.RowHeight = 15
         .Range(.Cells(1, 1), .Cells(byLigListePage3, 1)).EntireRow.RowHeight = 25
-        .Rows(5).RowHeight = 40
+        .Rows(5).RowHeight = 45
         .Columns.ColumnWidth = 5
         Union(.Columns(1), .Columns(2)).ColumnWidth = 25
         
@@ -121,8 +131,8 @@ Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
         With .Buttons.Add(rngBtnAjouterEval.Left, rngBtnAjouterEval.Top, _
                           rngBtnAjouterEval.Width, rngBtnAjouterEval.Height)
             .Caption = "Ajouter une évaluation"
-            .OnAction = "btnAjouterEvaluation_Click"
-            .Name = "btnAjouterEval"
+            .OnAction = "BtnAjouterEvaluation_Click"
+            .Name = "BtnAjouterEval"
         End With
         Set rngBtnAjouterEval = Nothing
         
@@ -131,8 +141,8 @@ Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
         With .Buttons.Add(rngBtnInfosNotation.Left, rngBtnInfosNotation.Top, _
                           rngBtnInfosNotation.Width, rngBtnInfosNotation.Height)
             .Caption = "Informations notation"
-            .OnAction = "btnInfosNotation_Click"
-            .Name = "btnInfosNotation"
+            .OnAction = "BtnInfosNotation_Click"
+            .Name = "BtnInfosNotation"
         End With
         Set rngBtnInfosNotation = Nothing
         
@@ -143,7 +153,7 @@ Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
             .Borders.LineStyle = xlContinuous
             .Borders.Weight = xlMedium
             .MergeCells = True
-            .Value = getNomClasse(byClasse)
+            .Value = GetNomClasse(byClasse)
         End With
         arrHeaderEval(1, 1) = "Nom de l'évaluation"
         arrHeaderEval(2, 1) = "Trimestre"
@@ -180,11 +190,75 @@ Public Sub initPage3(ByVal byClasse As Byte, ByVal byNbEleves As Byte)
     End With
     
     ' *** FIGEAGE VOLETS ***
-    freezePanes ActiveWindow, byLigListePage3, 2
+    FreezePanes ActiveWindow, byLigListePage3, 2
     
     ' *** AJOUT 1e EVALUATION ***
-    arrCompetEval = getArrayChoixCompetences
-    ajouterEvaluation byClasse, 1, 3, arrCompetEval
+    arrCompetEval = GetArrayChoixCompetences
+    AjouterEvaluation byClasse, 1, 3, arrCompetEval
+End Sub
+
+Public Sub CalculNote(ByVal byClasse As Byte, ByVal byEval As Byte)
+    Dim byColNote       As Byte         ' Colonne position note
+    Dim byColEval       As Byte         ' Colonne début évaluation
+    Dim arrCoeff        As Variant      ' Array des coeff compétences
+    Dim arrLettres      As Variant      ' Array des lettres de compétence (A/B/C/D/E)
+    Dim arrNotes        As Variant      ' Array de sortie des notes (moyenne classe + note pour chaque élèves)
+    Dim byEleve         As Byte         ' Index de l'élève
+    Dim byNbEleves      As Byte         ' Nombre d'élèves de la classe
+    Dim byCompet        As Byte         ' Index de la compétence évaluée
+    Dim byNbCompetEval  As Byte         ' Nombre de compétences notées pendant l'évaluation
+                                        ' (variable à supprimer après choix des compétences de l'éval par UserForm)
+    Dim dbSommeCoeff    As Double       ' Somme des coefficients de chaque compétence
+    
+    With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
+        ' *** COL DEBUT/FIN EVAL ***
+        byColNote = .Buttons("BtnCalculNote_Classe" & byClasse & "_Eval" & byEval).TopLeftCell.Column
+        If byEval = 1 Then
+            byColEval = 3
+        Else
+            byColEval = .Buttons("BtnCalculNote_Classe" & byClasse & "_Eval" & byEval - 1).TopLeftCell.Column + 1
+        End If
+        
+        ' *** RECUPERATION ARRAYS ***
+        arrCoeff = .Range(.Cells(byLigListePage3, byColEval), .Cells(byLigListePage3, byColNote - 1)).Value2
+        byNbEleves = GetNombreEleves(byClasse)
+        arrLettres = .Range(.Cells(byLigListePage3 + 1, byColEval), .Cells(byLigListePage3 + byNbEleves, byColNote - 1))
+        ReDim arrNotes(0 To byNbEleves)
+        byNbCompetEval = 0
+        dbSommeCoeff = 0#
+        arrNotes(0) = 0#
+        
+        ' *** CALCUL NOMBRE COMPET EVAL ***
+        For byCompet = 1 To byColNote - byColEval
+            If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
+                byNbCompetEval = byNbCompetEval + 1
+                dbSommeCoeff = dbSommeCoeff + arrCoeff(1, byCompet)
+            End If
+        Next byCompet
+        
+        ' *** PARCOURS DES ELEVES ***
+        If byNbCompetEval > 0 Then
+            For byEleve = 1 To byNbEleves
+                arrNotes(byEleve) = 0#
+                ' *** PARCOURS DES COMPETENCES ***
+                For byCompet = 1 To byColNote - byColEval
+                    ' *** AJOUT DE LA COMPETENCE SI COEFF <> 0
+                    If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
+                        arrNotes(byEleve) = arrNotes(byEleve) + CDbl(ConvertirLettreEnValeur(CStr(arrLettres(byEleve, byCompet)))) * CDbl(arrCoeff(1, byCompet))
+                    End If
+                Next byCompet
+                ' *** CALCUL NOTE FINALE ***
+                arrNotes(byEleve) = Format(5# * arrNotes(byEleve) / CDbl(dbSommeCoeff), "Standard")
+                arrNotes(0) = arrNotes(0) + arrNotes(byEleve)
+                ' *** ACTUALISATION AVANCEMENT ***
+                UserForm5.updateAvancement byEleve, byNbEleves
+            Next byEleve
+            ' *** CALCUL MOYENNE CLASSE ***
+            arrNotes(0) = Format(arrNotes(0) / CDbl(byNbEleves), "Standard")
+            ' *** ECRITURE DES CELLULES ***
+            .Range(.Cells(byLigListePage3, byColNote), .Cells(byLigListePage3 + byNbEleves, byColNote)) = Application.WorksheetFunction.Transpose(arrNotes)
+        End If
+    End With
 End Sub
 
 ' *******************************************************************************
@@ -195,7 +269,8 @@ End Sub
 '                               Procédures privées
 ' *******************************************************************************
 
-Private Sub btnAjouterEvaluation_Click()
+'@EntryPoint
+Private Sub BtnAjouterEvaluation_Click()
     ' *** DECLARATION VARIABLES ***
     Dim byClasse As Byte
     Dim byColEval As Byte
@@ -203,23 +278,23 @@ Private Sub btnAjouterEvaluation_Click()
     Dim arrCompetEval As Variant
     
     ' *** AFFECTATION VARIABLES ***
-    byClasse = getIndiceClasse(ActiveSheet.Name)
-    With ThisWorkbook.Worksheets(getNomPage3(byClasse))
+    byClasse = GetIndiceClasse(ActiveSheet.Name)
+    With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
         byEval = .Buttons.Count - 1
         byColEval = .UsedRange.Columns.Count
     End With
-    arrCompetEval = getArrayChoixCompetences
+    arrCompetEval = GetArrayChoixCompetences
     
     ' *** AJOUT EVAL ***
-    disableUpdates
-    ajouterEvaluation byClasse, byEval, byColEval, arrCompetEval
-    enableUpdates
+    DisableUpdates
+    AjouterEvaluation byClasse, byEval, byColEval, arrCompetEval
+    EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
-    MsgBox "Nouvelle évaluation ajoutée à la classe '" & getNomClasse(byClasse) & "'."
+    MsgBox "Nouvelle évaluation ajoutée à la classe '" & GetNomClasse(byClasse) & "'."
 End Sub
 
-Private Sub ajouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVal byColEval As Byte, ByRef arrCompetEval As Variant)
+Private Sub AjouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVal byColEval As Byte, ByRef arrCompetEval As Variant)
     ' *** DECLARATION VARIABLES ***
     Dim arrDomaines As Variant
     Dim iDomaine As Byte
@@ -230,11 +305,11 @@ Private Sub ajouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVa
     Dim byNbEleves As Byte
     Dim rngBtnCalculNote As Range
     
-    With ThisWorkbook.Worksheets(getNomPage3(byClasse))
+    With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
         ' *** AFFECTATION VARIABLES ***
-        arrDomaines = getArrayDomaines
-        byNbCompet = getTailleJaggedArray(arrCompetEval)
-        byNbEleves = getNombreEleves(byClasse)
+        arrDomaines = GetArrayDomaines
+        byNbCompet = GetSizeOfJaggedArray(arrCompetEval)
+        byNbEleves = GetNombreEleves(byClasse)
         
         ' *** FORMATAGE ZONE EVAL ***
         .Range(.Cells(1, byColEval), .Cells(1, byColEval + byNbCompet - 1)).Interior.ColorIndex = byCouleurEval_1
@@ -261,7 +336,7 @@ Private Sub ajouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVa
         .Range(.Cells(5, byColEval), .Cells(5, byColEval + byNbCompet - 1)).Interior.ColorIndex = byCouleurCompet_2
         .Range(.Cells(5, byColEval), .Cells(5, byColEval + byNbCompet - 1)).Orientation = xlUpward
         For iDomaine = 1 To 8
-            byNbCompetParDomaine = getTailleArray(arrCompetEval(iDomaine))
+            byNbCompetParDomaine = GetSizeOfArray(arrCompetEval(iDomaine))
             If byNbCompetParDomaine <> 0 Then
                 With .Range(.Cells(4, byColEval + iCompetGeneral), _
                             .Cells(6 + byNbEleves, byColEval + iCompetGeneral + (byNbCompetParDomaine - 1)))
@@ -291,8 +366,8 @@ Private Sub ajouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVa
         With .Buttons.Add(rngBtnCalculNote.Left, rngBtnCalculNote.Top, _
                           rngBtnCalculNote.Width, rngBtnCalculNote.Height)
             .Caption = "Calcul" & vbNewLine & "note"
-            .OnAction = "btnCalculNote_Click"
-            .Name = "btnCalculNote_Classe" & byClasse & "_Eval" & byEval
+            .OnAction = "BtnCalculNote_Click"
+            .Name = "BtnCalculNote_Classe" & byClasse & "_Eval" & byEval
         End With
         With .Range(.Cells(4, byColEval + byNbCompet), .Cells(byLigListePage3 + byNbEleves, byColEval + byNbCompet))
             .Interior.ColorIndex = byCouleurNote_2
@@ -321,11 +396,13 @@ Private Sub ajouterEvaluation(ByVal byClasse As Byte, ByVal byEval As Byte, ByVa
     End With
 End Sub
 
-Private Sub btnInfosNotation_Click()
+'@EntryPoint
+Private Sub BtnInfosNotation_Click()
     MsgBox "Infos notation ..."
 End Sub
 
-Private Sub btnCalculNote_Click()
+'@EntryPoint
+Private Sub BtnCalculNote_Click()
     Dim sEval       As String   ' Nom de l'évaluation
     Dim byEval      As Byte     ' Numéro de l'évaluation
     Dim byClasse    As Byte     ' Numéro de la classe
@@ -333,82 +410,17 @@ Private Sub btnCalculNote_Click()
     ' *** AFFECTATION VARIABLES ***
     sEval = Split(Application.Caller, "_")(2)
     byEval = CByte(Right(sEval, Len(sEval) - 4))
-    byClasse = getIndiceClasse(ActiveSheet.Name)
+    byClasse = GetIndiceClasse(ActiveSheet.Name)
     
     ' *** REFRESH ECRAN OFF ***
     UserForm5.Show vbModeless
-    disableUpdates
+    DisableUpdates
     
     ' *** CALCUL NOTE ***
-    calculNote byClasse, byEval
+    CalculNote byClasse, byEval
         
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
     Unload UserForm5
 End Sub
-
-Private Sub calculNote(ByVal byClasse As Byte, ByVal byEval As Byte)
-    Dim byColNote       As Byte         ' Colonne position note
-    Dim byColEval       As Byte         ' Colonne début évaluation
-    Dim arrCoeff        As Variant      ' Array des coeff compétences
-    Dim arrLettres      As Variant      ' Array des lettres de compétence (A/B/C/D/E)
-    Dim arrNotes        As Variant      ' Array de sortie des notes (moyenne classe + note pour chaque élèves)
-    Dim byEleve         As Byte         ' Index de l'élève
-    Dim byNbEleves      As Byte         ' Nombre d'élèves de la classe
-    Dim byCompet        As Byte         ' Index de la compétence évaluée
-    Dim byNbCompetEval  As Byte         ' Nombre de compétences notées pendant l'évaluation
-                                            ' (variable à supprimer après choix des compétences de l'éval par UserForm)
-    Dim dbSommeCoeff    As Double       ' Somme des coefficients de chaque compétence
-    
-    With ThisWorkbook.Worksheets(getNomPage3(byClasse))
-        ' *** COL DEBUT/FIN EVAL ***
-        byColNote = .Buttons("btnCalculNote_Classe" & byClasse & "_Eval" & byEval).TopLeftCell.Column
-        If byEval = 1 Then
-            byColEval = 3
-        Else
-            byColEval = .Buttons("btnCalculNote_Classe" & byClasse & "_Eval" & byEval - 1).TopLeftCell.Column + 1
-        End If
-        
-        ' *** RECUPERATION ARRAYS ***
-        arrCoeff = .Range(.Cells(byLigListePage3, byColEval), .Cells(byLigListePage3, byColNote - 1)).Value2
-        byNbEleves = getNombreEleves(byClasse)
-        arrLettres = .Range(.Cells(byLigListePage3 + 1, byColEval), .Cells(byLigListePage3 + byNbEleves, byColNote - 1))
-        ReDim arrNotes(0 To byNbEleves)
-        byNbCompetEval = 0
-        dbSommeCoeff = 0#
-        arrNotes(0) = 0#
-        
-        ' *** CALCUL NOMBRE COMPET EVAL ***
-        For byCompet = 1 To byColNote - byColEval
-            If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
-                byNbCompetEval = byNbCompetEval + 1
-                dbSommeCoeff = dbSommeCoeff + arrCoeff(1, byCompet)
-            End If
-        Next byCompet
-        
-        ' *** PARCOURS DES ELEVES ***
-        If byNbCompetEval > 0 Then
-            For byEleve = 1 To byNbEleves
-                arrNotes(byEleve) = 0#
-                ' *** PARCOURS DES COMPETENCES ***
-                For byCompet = 1 To byColNote - byColEval
-                    ' *** AJOUT DE LA COMPETENCE SI COEFF <> 0
-                    If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
-                        arrNotes(byEleve) = arrNotes(byEleve) + CDbl(convertLettreEnValeur(CStr(arrLettres(byEleve, byCompet)))) * CDbl(arrCoeff(1, byCompet))
-                    End If
-                Next byCompet
-                ' *** CALCUL NOTE FINALE ***
-                arrNotes(byEleve) = Format(5# * arrNotes(byEleve) / CDbl(dbSommeCoeff), "Standard")
-                arrNotes(0) = arrNotes(0) + arrNotes(byEleve)
-                ' *** ACTUALISATION AVANCEMENT ***
-                UserForm5.updateAvancement byEleve, byNbEleves
-            Next byEleve
-            ' *** CALCUL MOYENNE CLASSE ***
-            arrNotes(0) = Format(arrNotes(0) / CDbl(byNbEleves), "Standard")
-            ' *** ECRITURE DES CELLULES ***
-            .Range(.Cells(byLigListePage3, byColNote), .Cells(byLigListePage3 + byNbEleves, byColNote)) = Application.WorksheetFunction.Transpose(arrNotes)
-        End If
-    End With
-End Sub
-
 

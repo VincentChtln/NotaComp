@@ -12,7 +12,8 @@ Attribute VB_Name = "Module1"
 '   V1.1    Amelioration de plusieurs fonctionnalités
 '   V2      Refonte graphique et fonctionnelle
 '   V2.4    Ajout de UserForm pour la modification des listes de classes
-'   V2.5    Ajout de UserForm pour la modification des évaluations, modifications graphiques, amélioration fonctionnelle du code
+'   V2.5    Amélioration fonctionnelle du code, modifications graphiques
+'   V2.6    Ajout de UserForm pour la modification des évaluations
 '
 ' *******************************************************************************
 '                       GNU General Public License V3
@@ -58,14 +59,66 @@ Attribute VB_Name = "Module1"
 
 ' *******************************************************************************
 '                               Module 1 - Accueil
+' *******************************************************************************
 '
 '   Fonctions publiques
+'       IsWorkbookProtected() As Boolean
+'       IsWorksheetProtected(ByVal ws As Worksheet) As Boolean
+'       GetNomPage3(ByVal byClasse As Byte) As String
+'       GetNomPage4(ByVal byClasse As Byte) As String
+'       GetNomClasse(ByVal byClasse As Byte) As String
+'       GetIndiceClasse(strNomWs As String) As Byte
+'       GetNombreClasses() As Byte
+'       GetNombreEleves(ByVal byClasse As Byte) As Byte
+'       GetIndexInArray(ByRef arrSearch As Variant, ByVal varValue As Variant) As Long
+'       GetSizeOfArray(ByRef arr As Variant) As Byte
+'       GetSizeOfJaggedArray(ByRef arr As Variant) As Byte
+'       GetArrayDomaines() As String()
+'       GetArrayChoixDomaines() As Variant()
+'       GetArrayChoixCompetences() As Variant()
 '
 '   Procédures publiques
+'       ProtectWorkbook()
+'       UnprotectWorkbook()
+'       ProtectWorksheet(ByRef ws As Worksheet)
+'       ProtectAllWorksheets()
+'       UnprotectWorksheet(ByRef ws As Worksheet)
+'       EnableUpdates()
+'       DisableUpdates()
+'       DisplayTemporaryMessage(ByVal strMessage As String, ByVal byDuration As Byte)
+'       ClearStatusBar()
+'       FreezePanes(ByRef wdw As Window, ByVal byLig As Byte, ByVal byCol As Byte)
+'       UnloadAllUserForms()
+'       DeleteAllButtons(ByRef ws As Worksheet)
+'       AddWorksheet(ByVal sNom As String)
+'       SetNombreEleves(ByVal byClasse As Byte, ByVal byNombre As Byte)
+'       CreerTableau(ByVal strNomWs As String, ByVal rngCelOrigine As Range, _
+'                    ByVal iHaut As Byte, ByVal iLarg As Byte, ByVal iOrientation As Byte, _
+'                    ByRef arrAttribut() As String, ByVal byCouleur As Byte, Optional ByVal bLocked As Boolean = True)
 '
 '   Fonctions privées
+'       IsInfosOK() As Boolean
+'       IsNbClassesOK() As Boolean
+'       IsNbEleveOK(ByVal varNbEleve As Variant) As Boolean
+'       IsDonneesClassesOK() As Boolean
+'       GetArrayCompetences(ByVal iCycle As Byte) As Variant()
+'       GetNombreCompetences(ByVal iCycle As Byte) As Byte
+'       IsCompetOK() As Boolean
 '
 '   Procédures privées
+'       InitNotaComp()
+'       BtnDemarrerConfiguration_Click()
+'       BtnValiderNombreClasses_Click()
+'       BtnModifierNombreClasses_Click()
+'       BtnValiderClasses_Click()
+'       DrpChoixCycle_Change()
+'       BtnValiderCompetences_Click()
+'       CreerTableauLogiciel()
+'       CreerTableauInformations()
+'       CreerTableauNombreClasses()
+'       CreerTableauClasses(ByVal byNbClasses As Byte)
+'       CreerDropdownCycle()
+'       CreerTableauChoixCompetences(ByVal iDrpValue As Byte)
 '
 ' *******************************************************************************
 
@@ -76,26 +129,26 @@ Option Explicit
 ' *******************************************************************************
 
 ' *** LOGICIEL ***
-       Const strVersion         As String = "v2.5 - Révision 2021"
+Public Const strVersion         As String = "v2.5 - Révision 2021"
        Const strLienGithub      As String = "https://github.com/VincentChtln/NotaComp"
        Const strLienSocleCommun As String = "https://www.education.gouv.fr/bo/15/Hebdo17/MENE1506516D.htm?cid_bo=87834"
 
 ' *** DONNEES PROTECTION ***
-Global Const strPage1           As String = "Accueil"
-Global Const strPage2           As String = "Listes"
-Global Const strPassword        As String = vbNullString
+Public Const strPage1           As String = "Accueil"
+Public Const strPage2           As String = "Listes"
+Public Const strPassword        As String = vbNullString
 
 ' *** COULEURS ***
        Const byCouleurLogiciel  As Byte = 22
        Const byCouleurInfos     As Byte = 15
-Global Const byCouleurCompet_1  As Byte = 50
-Global Const byCouleurCompet_2  As Byte = 35
-Global Const byCouleurClasse    As Byte = 44
-Global Const byCouleurEval_1    As Byte = 45
-Global Const byCouleurEval_2    As Byte = 40
-Global Const byCouleurNote_1    As Byte = 42
-Global Const byCouleurNote_2    As Byte = 34
-Global Const byCouleurBilan     As Byte = 45
+Public Const byCouleurCompet_1  As Byte = 50
+Public Const byCouleurCompet_2  As Byte = 35
+Public Const byCouleurClasse    As Byte = 44
+Public Const byCouleurEval_1    As Byte = 45
+Public Const byCouleurEval_2    As Byte = 40
+Public Const byCouleurNote_1    As Byte = 42
+Public Const byCouleurNote_2    As Byte = 34
+Public Const byCouleurBilan     As Byte = 45
 
 ' *** LIMITES MIN ET MAX ***
        Const byNbClasses_Min    As Byte = 1
@@ -108,96 +161,96 @@ Global Const byCouleurBilan     As Byte = 45
        Const byColTabLogiciel   As Byte = 2
        Const byLigTabInfos      As Byte = byLigTabLogiciel + 5
        Const byColTabInfos      As Byte = 2
-Global Const byLigTabClasses    As Byte = byLigTabInfos + 6
+Public Const byLigTabClasses    As Byte = byLigTabInfos + 6
        Const byColTabClasses    As Byte = 2
-Global Const byColTabCompet     As Byte = 2
-Global Const byLigListePage2    As Byte = 1
-Global Const byLigListePage3    As Byte = 6
-Global Const byLigListePage4    As Byte = 3
+Public Const byColTabCompet     As Byte = 2
+Public Const byLigListePage2    As Byte = 1
+Public Const byLigListePage3    As Byte = 6
+Public Const byLigListePage4    As Byte = 3
 
 ' *** NOTES REFERENCE ***
-Global Const dNoteA_Min         As Double = 3.5
-Global Const dNoteB_Min         As Double = 2.5
-Global Const dNoteC_Min         As Double = 1.5
-Global Const dNoteD_Min         As Double = 0
+Public Const dblNoteA_Min       As Double = 3.5
+Public Const dblNoteB_Min       As Double = 2.5
+Public Const dblNoteC_Min       As Double = 1.5
+Public Const dblNoteD_Min       As Double = 0
 
 ' *******************************************************************************
 '                               Fonctions publiques
 ' *******************************************************************************
 
-Public Function isWorkbookProtected() As Boolean
-    isWorkbookProtected = ThisWorkbook.ProtectWindows Or ThisWorkbook.ProtectStructure
+Public Function IsWorkbookProtected() As Boolean
+    IsWorkbookProtected = ThisWorkbook.ProtectWindows Or ThisWorkbook.ProtectStructure
 End Function
 
-Public Function isWorksheetProtected(ByVal ws As Worksheet) As Boolean
-    isWorksheetProtected = ws.ProtectContents Or ws.ProtectDrawingObjects Or ws.ProtectScenarios
+Public Function IsWorksheetProtected(ByVal ws As Worksheet) As Boolean
+    IsWorksheetProtected = ws.ProtectContents Or ws.ProtectDrawingObjects Or ws.ProtectScenarios
 End Function
 
-Public Function getNomPage3(ByVal byClasse As Byte) As String
-    getNomPage3 = "Notes (" & getNomClasse(byClasse) & ")"
+Public Function GetNomPage3(ByVal byClasse As Byte) As String
+    GetNomPage3 = "Notes (" & GetNomClasse(byClasse) & ")"
 End Function
 
-Public Function getNomPage4(ByVal byClasse As Byte) As String
-    getNomPage4 = "Bilan (" & getNomClasse(byClasse) & ")"
+Public Function GetNomPage4(ByVal byClasse As Byte) As String
+    GetNomPage4 = "Bilan (" & GetNomClasse(byClasse) & ")"
 End Function
 
-Public Function getNomClasse(ByVal byClasse As Byte) As String
-    getNomClasse = ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses + byClasse + 2, byColTabClasses).Value
+Public Function GetNomClasse(ByVal byClasse As Byte) As String
+    GetNomClasse = ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses + byClasse + 2, byColTabClasses).Value
 End Function
 
-Public Function getIndiceClasse(strNomWs As String) As Byte
+Public Function GetIndiceClasse(strNomWs As String) As Byte
     Dim byClasse As Byte
     
-    getIndiceClasse = 0
+    GetIndiceClasse = 0
     
-    For byClasse = 1 To getNombreClasses
-        If InStr(strNomWs, getNomClasse(byClasse)) <> 0 Then getIndiceClasse = byClasse
+    For byClasse = 1 To GetNombreClasses
+        If InStr(strNomWs, GetNomClasse(byClasse)) <> 0 Then GetIndiceClasse = byClasse
     Next byClasse
 End Function
 
-Public Function getNombreClasses() As Byte
-    getNombreClasses = CByte(ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses, byColTabClasses + 1).Value)
+Public Function GetNombreClasses() As Byte
+    GetNombreClasses = CByte(ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses, byColTabClasses + 1).Value)
 End Function
 
-Public Function getNombreEleves(ByVal byClasse As Byte) As Byte
-    getNombreEleves = CByte(ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses + byClasse + 2, byColTabClasses + 1).Value)
+Public Function GetNombreEleves(ByVal byClasse As Byte) As Byte
+    GetNombreEleves = CByte(ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses + byClasse + 2, byColTabClasses + 1).Value)
 End Function
 
-Public Function getTailleArray(ByRef arr As Variant) As Byte
+Public Function GetSizeOfArray(ByRef arr As Variant) As Byte
     Dim byTaille        As Byte
     Dim byDimension     As Byte
     byTaille = 1
     byDimension = 1
-    getTailleArray = 0
+    GetSizeOfArray = 0
     
     On Error GoTo ErrorHandler
     Do While True
         byTaille = byTaille * (UBound(arr, byDimension) - LBound(arr, byDimension) + 1)
-        If (byTaille > 1) Or Not (IsEmpty(arr(1))) Then getTailleArray = byTaille
+        If (byTaille > 1) Or Not (IsEmpty(arr(1))) Then GetSizeOfArray = byTaille
         byDimension = byDimension + 1
     Loop
     Exit Function
     
 ErrorHandler:
     If Err.Number = 13 Then ' Type Mismatch Error
-        Err.Raise vbObjectError, "getTailleArray" _
-            , "The argument passed to the getTailleArray function is not an array."
+        Err.Raise vbObjectError, "GetSizeOfArray" _
+            , "The argument passed to the GetSizeOfArray function is not an array."
     End If
 End Function
 
-Public Function getTailleJaggedArray(ByRef arr As Variant) As Byte
+Public Function GetSizeOfJaggedArray(ByRef arr As Variant) As Byte
     Dim iTailleExter As Byte
     Dim iElement As Byte
     
-    iTailleExter = getTailleArray(arr)
-    getTailleJaggedArray = 0
+    iTailleExter = GetSizeOfArray(arr)
+    GetSizeOfJaggedArray = 0
     
     For iElement = 1 To iTailleExter
-        getTailleJaggedArray = getTailleJaggedArray + getTailleArray(arr(iElement))
+        GetSizeOfJaggedArray = GetSizeOfJaggedArray + GetSizeOfArray(arr(iElement))
     Next iElement
 End Function
 
-Public Function getArrayDomaines() As String()
+Public Function GetArrayDomaines() As String()
     Dim arrDomaines(1 To 8, 1 To 2) As String
     
     ' *** NOM COMPLET ***
@@ -224,10 +277,10 @@ Public Function getArrayDomaines() As String()
     arrDomaines(7, 2) = "D4"
     arrDomaines(8, 2) = "D5"
     
-    getArrayDomaines = arrDomaines
+    GetArrayDomaines = arrDomaines
 End Function
 
-Public Function getArrayChoixCompetences() As Variant()
+Public Function GetArrayChoixCompetences() As Variant()
     ' *** DECLARATION VARIABLES ***
     Dim arrTamponSrc As Variant
     Dim arrTamponDest() As Variant
@@ -243,16 +296,16 @@ Public Function getArrayChoixCompetences() As Variant()
 
     With ThisWorkbook.Worksheets(strPage1)
         ' *** AFFECTATION VARIABLES ***
-        byLigTabCompet = byLigTabClasses + getNombreClasses + 7
+        byLigTabCompet = byLigTabClasses + GetNombreClasses + 7
         iDrpValue = .DropDowns("drpChoixCycle").Value
         iCompetTampon = 1
-        arrCompet = getArrayCompetences(iDrpValue + 1)
+        arrCompet = GetArrayCompetences(iDrpValue + 1)
         arrTamponSrc = .Range(.Cells(byLigTabCompet + 1, byColTabCompet + 2), _
-                              .Cells(byLigTabCompet + getNombreCompetences(iDrpValue + 1), byColTabCompet + 3))
+                              .Cells(byLigTabCompet + GetNombreCompetences(iDrpValue + 1), byColTabCompet + 3))
                               
         ' *** BOUCLE SUR TOUS LES DOMAINES ET COMPETENCES ***
         For iDomaine = 1 To 8
-            byNbCompetParDomaine = getTailleArray(arrCompet(iDomaine))
+            byNbCompetParDomaine = GetSizeOfArray(arrCompet(iDomaine))
             iCompetChoisie = 1
             ReDim arrTamponDest(1 To 1)
             For iCompet = 1 To byNbCompetParDomaine
@@ -268,39 +321,78 @@ Public Function getArrayChoixCompetences() As Variant()
             arrChoixCompet(iDomaine) = arrTamponDest
         Next iDomaine
     End With
-    getArrayChoixCompetences = arrChoixCompet
+    GetArrayChoixCompetences = arrChoixCompet
 End Function
+
+Public Function GetArrayChoixDomaines() As Variant()
+    ' *** DECLARATION VARIABLES ***
+    Dim byDomaine As Byte
+    Dim byDomaine2 As Byte
+    Dim arrChoixCompet As Variant
+    Dim arrDomaines As Variant
+    Dim arrChoixDomaines As Variant
+    
+    ' *** AFFECTATION VARIABLES ***
+    byDomaine2 = 1
+    ReDim arrChoixDomaines(1 To 1)
+    arrChoixCompet = GetArrayChoixCompetences
+    arrDomaines = GetArrayDomaines
+    
+    ' *** CALCUL ARRAY ***
+    For byDomaine = 1 To 8
+        If GetSizeOfArray(arrChoixCompet(byDomaine)) <> 0 Then
+            If byDomaine2 > 1 Then ReDim Preserve arrChoixDomaines(1 To byDomaine2)
+            arrChoixDomaines(byDomaine2) = arrDomaines(byDomaine, 2)
+            byDomaine2 = byDomaine2 + 1
+        End If
+    Next byDomaine
+    
+    ' *** RENVOI ARRAY ***
+    GetArrayChoixDomaines = arrChoixDomaines
+End Function
+
+Public Function GetIndexInArray(ByRef arrSearch As Variant, ByVal varValue As Variant) As Long
+    Dim lIndex As Long
+    
+    For lIndex = LBound(arrSearch, 1) To UBound(arrSearch, 1)
+        If arrSearch(lIndex) = varValue Then GoTo EOF
+    Next lIndex
+    lIndex = 0
+EOF:
+    GetIndexInArray = lIndex
+End Function
+
 
 ' *******************************************************************************
 '                               Procédures publiques
 ' *******************************************************************************
 
-Public Sub protectWorkbook()
+Public Sub ProtectWorkbook()
     ThisWorkbook.Protect Password:=strPassword, Structure:=True, Windows:=True
 End Sub
 
-Public Sub unprotectWorkbook()
+Public Sub UnprotectWorkbook()
     ThisWorkbook.Unprotect Password:=strPassword
 End Sub
 
-Public Sub protectWorksheet(ByRef ws As Worksheet)
+Public Sub ProtectWorksheet(ByRef ws As Worksheet)
     ws.Protect Password:=strPassword, DrawingObjects:=True, Contents:=True, Scenarios:=True, UserInterFaceOnly:=True
     ws.EnableSelection = xlUnlockedCells
 End Sub
 
-Public Sub protectAllWorksheets()
+Public Sub ProtectAllWorksheets()
     Dim ws As Worksheet
     
     For Each ws In ThisWorkbook.Worksheets
-        protectWorksheet ws
+        ProtectWorksheet ws
     Next ws
 End Sub
 
-Public Sub unprotectWorksheet(ByRef ws As Worksheet)
+Public Sub UnprotectWorksheet(ByRef ws As Worksheet)
     ws.Unprotect Password:=strPassword
 End Sub
 
-Public Sub enableUpdates()
+Public Sub EnableUpdates()
     With Application
         .ScreenUpdating = True
         .StatusBar = "Prêt"
@@ -311,7 +403,7 @@ Public Sub enableUpdates()
     End With
 End Sub
 
-Public Sub disableUpdates()
+Public Sub DisableUpdates()
     With Application
         .ScreenUpdating = False
         .StatusBar = False
@@ -322,15 +414,24 @@ Public Sub disableUpdates()
     End With
 End Sub
 
-Public Sub freezePanes(ByRef wdw As Window, ByVal byLig As Byte, ByVal byCol As Byte)
+Public Sub DisplayTemporaryMessage(ByVal strMessage As String, ByVal byDuration As Byte)
+    Application.StatusBar = strMessage
+    Application.OnTime Now + TimeSerial(0, 0, byDuration), "ClearStatusBar"
+End Sub
+
+Public Sub ClearStatusBar()
+    Application.StatusBar = ""
+End Sub
+
+Public Sub FreezePanes(ByRef wdw As Window, ByVal byLig As Byte, ByVal byCol As Byte)
     With wdw
         .SplitRow = byLig
         .SplitColumn = byCol
-        .freezePanes = True
+        .FreezePanes = True
     End With
 End Sub
 
-Public Sub unloadAllUserForms()
+Public Sub UnloadAllUserForms()
     Dim uf As UserForm
     
     For Each uf In VBA.UserForms
@@ -338,12 +439,12 @@ Public Sub unloadAllUserForms()
     Next uf
 End Sub
 
-Public Sub deleteAllButtons(ByRef ws As Worksheet)
+Public Sub DeleteAllButtons(ByRef ws As Worksheet)
     ws.Buttons.Delete
 End Sub
 
-Public Sub addWorksheet(ByVal sNom As String)
-    If isWorkbookProtected Then Exit Sub
+Public Sub AddWorksheet(ByVal sNom As String)
+    If IsWorkbookProtected Then Exit Sub
     
     With ThisWorkbook
         .Worksheets.Add After:=.Worksheets(.Worksheets.Count)
@@ -366,7 +467,11 @@ Public Sub addWorksheet(ByVal sNom As String)
     End With
 End Sub
 
-Public Sub creerTableau(ByVal strNomWs As String, ByVal rngCelOrigine As Range, _
+Public Sub SetNombreEleves(ByVal byClasse As Byte, ByVal byNombre As Byte)
+    ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses + byClasse + 2, byColTabClasses + 1).Value = byNombre
+End Sub
+
+Public Sub CreerTableau(ByVal strNomWs As String, ByVal rngCelOrigine As Range, _
                         ByVal iHaut As Byte, ByVal iLarg As Byte, ByVal iOrientation As Byte, _
                         ByRef arrAttribut() As String, ByVal byCouleur As Byte, Optional ByVal bLocked As Boolean = True)
     ' ***  DECLARATION VARIABLES ***
@@ -384,8 +489,8 @@ Public Sub creerTableau(ByVal strNomWs As String, ByVal rngCelOrigine As Range, 
     Next ws
     If Not (bWsNomOK) Or Not (rngCelOrigine.Count = 1) Or Not (iHaut >= 1) Or Not (iLarg >= 1) Then Exit Sub
     If Not (iOrientation = 1) And Not (iOrientation = 2) Then Exit Sub
-    If (iOrientation = 1) And (Not (iHaut >= 2) Or Not (getTailleArray(arrAttribut) = iLarg)) Then Exit Sub
-    If (iOrientation = 2) And (Not (iLarg >= 2) Or Not (getTailleArray(arrAttribut) = iHaut)) Then Exit Sub
+    If (iOrientation = 1) And (Not (iHaut >= 2) Or Not (GetSizeOfArray(arrAttribut) = iLarg)) Then Exit Sub
+    If (iOrientation = 2) And (Not (iLarg >= 2) Or Not (GetSizeOfArray(arrAttribut) = iHaut)) Then Exit Sub
     If Not ((byCouleur >= 1) And (byCouleur <= 56)) Then Exit Sub
     
     ' *** CREATION TABLEAU ***
@@ -422,34 +527,34 @@ End Sub
 ' *******************************************************************************
 '                               Fonctions privées
 ' *******************************************************************************
-Private Function isInfosOK() As Boolean
-    isInfosOK = False
+Private Function IsInfosOK() As Boolean
+    IsInfosOK = False
     With ThisWorkbook.Worksheets(strPage1)
-        If WorksheetFunction.CountBlank(.Range(.Cells(byLigTabInfos, byColTabInfos + 1), .Cells(byLigTabInfos + 3, byColTabInfos + 1))) = 0 Then isInfosOK = True
+        If WorksheetFunction.CountBlank(.Range(.Cells(byLigTabInfos, byColTabInfos + 1), .Cells(byLigTabInfos + 3, byColTabInfos + 1))) = 0 Then IsInfosOK = True
     End With
 End Function
 
-Private Function isNbClassesOK() As Boolean
-    isNbClassesOK = False
-    If getNombreClasses <> -1 Then isNbClassesOK = True
+Private Function IsNbClassesOK() As Boolean
+    IsNbClassesOK = False
+    If GetNombreClasses <> -1 Then IsNbClassesOK = True
 End Function
 
-Private Function isNbEleveOK(ByVal varNbEleve As Variant) As Boolean
-    isNbEleveOK = False
+Private Function IsNbEleveOK(ByVal varNbEleve As Variant) As Boolean
+    IsNbEleveOK = False
     If IsNumeric(varNbEleve) Then
-        If varNbEleve > byNbEleves_Min And varNbEleve < byNbEleves_Max Then isNbEleveOK = True
+        If varNbEleve > byNbEleves_Min And varNbEleve < byNbEleves_Max Then IsNbEleveOK = True
     End If
 End Function
 
-Private Function isDonneesClassesOK() As Boolean
+Private Function IsDonneesClassesOK() As Boolean
     ' *** DECLARATION VARIABLES ***
     Dim byNbClasses As Byte
     Dim byLigFinTableauClasses As Byte
     Dim rngTableauClasses As Range
     Dim celDonnee As Range
     
-    isDonneesClassesOK = False
-    byNbClasses = getNombreClasses
+    IsDonneesClassesOK = False
+    byNbClasses = GetNombreClasses
     If byNbClasses = -1 Then GoTo EOF
     
     With ThisWorkbook.Worksheets(strPage1)
@@ -464,17 +569,17 @@ Private Function isDonneesClassesOK() As Boolean
         ' *** VERIFICATION NOMBRE ELEVES ***
         For Each celDonnee In rngTableauClasses
             If celDonnee.Column = byColTabClasses + 1 Then
-                If Not (isNbEleveOK(celDonnee.Value)) Then GoTo EOF
+                If Not (IsNbEleveOK(celDonnee.Value)) Then GoTo EOF
             End If
         Next celDonnee
     End With
     
-    isDonneesClassesOK = True
+    IsDonneesClassesOK = True
     
 EOF:
 End Function
 
-Private Function getArrayCompetences(ByVal iCycle As Byte) As Variant()
+Private Function GetArrayCompetences(ByVal iCycle As Byte) As Variant()
     Dim arrCompetencesCycleI() As Variant
     
     ReDim arrCompetencesCycleI(1 To 8)
@@ -577,37 +682,57 @@ Private Function getArrayCompetences(ByVal iCycle As Byte) As Variant()
         ' *** VALEUR iCycle NON VALIDE
     Case Else
         ReDim arrCompetencesCycleI(1 To 1)
-        arrCompetencesCycleI = Array("")
+        arrCompetencesCycleI = Array(vbNullString)
     End Select
     
-    getArrayCompetences = arrCompetencesCycleI
+    GetArrayCompetences = arrCompetencesCycleI
 
 End Function
 
-Private Function getNombreCompetences(ByVal iCycle As Byte) As Byte
-    getNombreCompetences = getTailleJaggedArray(getArrayCompetences(iCycle))
+Private Function GetNombreCompetences(ByVal iCycle As Byte) As Byte
+    GetNombreCompetences = GetSizeOfJaggedArray(GetArrayCompetences(iCycle))
 End Function
 
-Private Function isCompetOK() As Boolean
-    isCompetOK = False
-    If True Then isCompetOK = True
+Private Function IsCompetOK() As Boolean
+    Dim arrChoixCompet As Variant
+    Dim byDomaine As Byte
+    Dim byCompet As Byte
+    Dim strCompet As Variant
+    
+    arrChoixCompet = GetArrayChoixCompetences
+    IsCompetOK = True
+    
+    If GetSizeOfJaggedArray(arrChoixCompet) < 2 Then
+        IsCompetOK = False
+        Exit Function
+    Else
+        For byDomaine = 1 To 8
+            If GetSizeOfArray(arrChoixCompet(byDomaine)) <> 0 Then
+                For byCompet = 1 To UBound(arrChoixCompet(byDomaine), 1)
+                    If Len(CStr(arrChoixCompet(byDomaine)(byCompet))) > 7 Then
+                        IsCompetOK = False
+                    End If
+                Next byCompet
+            End If
+        Next byDomaine
+    End If
 End Function
 
 ' *******************************************************************************
 '                               Procédures privées
 ' *******************************************************************************
 
-Private Sub initNotaComp()
+'@EntryPoint
+Private Sub InitNotaComp()
     ' *** DECLARATION VARIABLES ***
     Dim rngBtnDemarrerNotacomp As Range
-    Dim btnDemarrerNotacomp As Variant
     Dim shp As Shape
     
     ' *** REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
 
     ' *** VERIFICATION PROTECTION WORKBOOK ***
-    If isWorkbookProtected Then
+    If IsWorkbookProtected Then
         MsgBox "Ce classeur est protégé. Enlevez la protection avant de continuer."
         GoTo EOP
     End If
@@ -620,7 +745,7 @@ Private Sub initNotaComp()
         End If
         
         ' *** VERIFICATION PROTECTION FEUILLE ***
-        If isWorksheetProtected(.Worksheets(1)) Then
+        If IsWorksheetProtected(.Worksheets(1)) Then
             MsgBox "Cette feuille est protégée. Enlevez la protection avant de continuer."
             GoTo EOP
         End If
@@ -664,26 +789,26 @@ Private Sub initNotaComp()
             
             ' *** AJOUT BOUTON 'DEMARRER NOTACOMP' ***
             Set rngBtnDemarrerNotacomp = .Range(.Cells(byLigTabLogiciel, byColTabLogiciel + 3).Address)
-            Set btnDemarrerNotacomp = .Buttons.Add(rngBtnDemarrerNotacomp.Left, rngBtnDemarrerNotacomp.Top, _
-                                                   rngBtnDemarrerNotacomp.Width, rngBtnDemarrerNotacomp.Height)
-            With btnDemarrerNotacomp
+            With .Buttons.Add(rngBtnDemarrerNotacomp.Left, rngBtnDemarrerNotacomp.Top, _
+                              rngBtnDemarrerNotacomp.Width, rngBtnDemarrerNotacomp.Height)
                 .Caption = "Démarrer NotaComp"
-                .OnAction = "btnDemarrerConfiguration_Click"
+                .OnAction = "BtnDemarrerConfiguration_Click"
+                .Name = "BtnDemarrerConfiguration"
             End With
 
             ' *** AJOUT TABLEAU INFOS LOGICIEL ***
-            creerTableauLogiciel
+            CreerTableauLogiciel
         End With
         ' *** PROTECTION + REFRESH ECRAN ON ***
-        protectWorksheet .Worksheets(strPage1)
-        protectWorkbook
+        ProtectWorksheet .Worksheets(strPage1)
+        ProtectWorkbook
     End With
     
 EOP:
-    enableUpdates
+    EnableUpdates
 End Sub
 
-Private Sub creerTableauLogiciel()
+Private Sub CreerTableauLogiciel()
     Dim arrAttributLogiciel(1 To 3) As String
     
     arrAttributLogiciel(1) = "Version de l'outil"
@@ -691,7 +816,7 @@ Private Sub creerTableauLogiciel()
     arrAttributLogiciel(3) = "Textes officiels - Socle commun"
     
     With ThisWorkbook.Worksheets(strPage1)
-        creerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabLogiciel, byColTabLogiciel), _
+        CreerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabLogiciel, byColTabLogiciel), _
         iHaut:=3, iLarg:=2, iOrientation:=2, _
         arrAttribut:=arrAttributLogiciel, byCouleur:=byCouleurLogiciel
         .Cells(byLigTabLogiciel, byColTabLogiciel + 1).Value = strVersion
@@ -703,9 +828,10 @@ Private Sub creerTableauLogiciel()
     End With
 End Sub
 
-Private Sub btnDemarrerConfiguration_Click()
+'@EntryPoint
+Private Sub BtnDemarrerConfiguration_Click()
     ' *** REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
     
     ' *** MESSAGE INFORMATION ***
     MsgBox "Bienvenue dans la configuration de NotaComp. Prennez le temps nécessaire pour réaliser correctement " & _
@@ -718,14 +844,14 @@ Private Sub btnDemarrerConfiguration_Click()
            "Pensez à préparer ces éléments au préalable pour faciliter la configuration." & vbNewLine & vbNewLine & _
            "C'est parti !"
     ' *** SUPPRESSION BOUTONS ***
-    deleteAllButtons ThisWorkbook.Worksheets(strPage1)
+    DeleteAllButtons ThisWorkbook.Worksheets(strPage1)
     
     ' *** APPEL PROCEDURE ***
-    creerTableauInformations
-    creerTableauNombreClasses
+    CreerTableauInformations
+    CreerTableauNombreClasses
 
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
         
     ' *** MESSAGE INFORMATION ***
     MsgBox "Entrez tout d'abord vos informations dans le tableau d'informations (tableau gris)." & vbNewLine & _
@@ -736,7 +862,7 @@ Private Sub btnDemarrerConfiguration_Click()
 
 End Sub
 
-Private Sub creerTableauInformations()
+Private Sub CreerTableauInformations()
     Dim arrAttributInfos(1 To 4) As String
     
     arrAttributInfos(1) = "Etablissement"
@@ -745,23 +871,22 @@ Private Sub creerTableauInformations()
     arrAttributInfos(4) = "Année scolaire"
     
     With ThisWorkbook.Worksheets(strPage1)
-        creerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabInfos, byColTabInfos), _
+        CreerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabInfos, byColTabInfos), _
         iHaut:=4, iLarg:=2, iOrientation:=2, _
         arrAttribut:=arrAttributInfos, byCouleur:=byCouleurInfos, bLocked:=False
     End With
 End Sub
 
-Private Sub creerTableauNombreClasses()
+Private Sub CreerTableauNombreClasses()
     ' *** DECLARATION VARIABLES ***
     Dim arrAttributClasses(1 To 1) As String
     Dim rngBtnValiderNbClasses As Range
-    Dim btnValiderNbClasses As Variant
     
     arrAttributClasses(1) = "Nombre de classes"
     
     With ThisWorkbook.Worksheets(strPage1)
         ' *** CREATION TABLEAU ***
-        creerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabClasses, byColTabClasses), _
+        CreerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabClasses, byColTabClasses), _
         iHaut:=1, iLarg:=2, iOrientation:=2, _
         arrAttribut:=arrAttributClasses, byCouleur:=byCouleurClasse, bLocked:=False
 
@@ -770,41 +895,42 @@ Private Sub creerTableauNombreClasses()
         With .Buttons.Add(rngBtnValiderNbClasses.Left, rngBtnValiderNbClasses.Top, _
                           rngBtnValiderNbClasses.Width, rngBtnValiderNbClasses.Height)
             .Caption = "Valider le nombre de classes"
-            .OnAction = "btnValiderNombreClasses_Click"
-            .Name = "btnValiderNombreClasses"
+            .OnAction = "BtnValiderNombreClasses_Click"
+            .Name = "BtnValiderNombreClasses"
         End With
         Set rngBtnValiderNbClasses = Nothing
     End With
 End Sub
 
-Private Sub btnValiderNombreClasses_Click()
+'@EntryPoint
+Private Sub BtnValiderNombreClasses_Click()
     ' *** DECLARATION VARIABLES ***
     Dim byNbClasses As Byte
     
     ' *** REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
     
     ' *** VERIFICATION VALEUR ***
-    If Not (isNbClassesOK) Then
+    If Not (IsNbClassesOK) Then
         MsgBox "ATTENTION: le nombre de classes n'est pas valide  (nombre min = " & byNbClasses_Min & ", nombre max = " & byNbClasses_Max & ")."
         GoTo EOP
     Else
-        byNbClasses = getNombreClasses
+        byNbClasses = GetNombreClasses
     End If
     
     ' *** MODIFICATION BOUTON ***
-    With ThisWorkbook.Worksheets(strPage1).Buttons("btnValiderNombreClasses")
+    With ThisWorkbook.Worksheets(strPage1).Buttons("BtnValiderNombreClasses")
         .LockedText = False
         .Caption = "Modifier le nombre de classes"
-        .OnAction = "btnModifierNombreClasses_Click"
-        .Name = "btnModifierNombreClasses"
+        .OnAction = "BtnModifierNombreClasses_Click"
+        .Name = "BtnModifierNombreClasses"
     End With
     
     ' *** APPEL PROCEDURE ***
-    creerTableauClasses byNbClasses
+    CreerTableauClasses byNbClasses
     
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 
     ' *** MESSAGE INFORMATION ***
     MsgBox "Entrez maintenant le nom de chaque classe ainsi que le nombre d'élèves qui s'y trouve. " & _
@@ -818,43 +944,43 @@ Private Sub btnValiderNombreClasses_Click()
 
 EOP:
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 End Sub
 
-Private Sub btnModifierNombreClasses_Click()
+'@EntryPoint
+Private Sub BtnModifierNombreClasses_Click()
     ' *** DECLARATION VARIABLES ***
     Dim byNbClasses As Byte
     
     ' *** REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
     
     ' *** VERIFICATION VALEUR ***
-    If Not (isNbClassesOK) Then
+    If Not (IsNbClassesOK) Then
         MsgBox "ATTENTION: le nombre de classes n'est pas valide  (nombre min = " & byNbClasses_Min & ", nombre max = " & byNbClasses_Max & ")."
         GoTo EOP
     Else
-        byNbClasses = getNombreClasses
+        byNbClasses = GetNombreClasses
     End If
     
     ' *** SUPPRESSION CELLULES ***
     With ThisWorkbook.Worksheets(strPage1)
         .Range(.Cells(byLigTabClasses + 1, byColTabClasses), .Cells(byLigTabClasses + byNbClasses_Max + 10, byColTabClasses + 1)).Delete Shift:=xlUp
-        .Buttons("btnValiderClasses").Delete
+        .Buttons("BtnValiderClasses").Delete
     End With
 
     ' *** APPEL PROCEDURE ***
-    creerTableauClasses byNbClasses
+    CreerTableauClasses byNbClasses
 
 EOP:
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 End Sub
 
-Private Sub creerTableauClasses(ByVal byNbClasses As Byte)
+Private Sub CreerTableauClasses(ByVal byNbClasses As Byte)
     ' *** DECLARATION VARIABLES ***
     Dim arrAttributClasses(1 To 2) As String
     Dim rngBtnValiderClasses As Range
-    Dim btnValiderClasses As Variant
     
     ' *** AFFECTATION VARIABLES ***
     arrAttributClasses(1) = "Nom de la classe"
@@ -862,7 +988,7 @@ Private Sub creerTableauClasses(ByVal byNbClasses As Byte)
     
     With ThisWorkbook.Worksheets(strPage1)
         ' *** CREATION TABLEAU ***
-        creerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabClasses + 2, byColTabClasses), _
+        CreerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabClasses + 2, byColTabClasses), _
         iHaut:=byNbClasses + 1, iLarg:=2, iOrientation:=1, _
         arrAttribut:=arrAttributClasses, byCouleur:=byCouleurClasse, bLocked:=False
         
@@ -871,23 +997,24 @@ Private Sub creerTableauClasses(ByVal byNbClasses As Byte)
         With .Buttons.Add(rngBtnValiderClasses.Left, rngBtnValiderClasses.Top, _
                           rngBtnValiderClasses.Width, rngBtnValiderClasses.Height)
             .Caption = "Valider les classes"
-            .OnAction = "btnValiderClasses_Click"
-            .Name = "btnValiderClasses"
+            .OnAction = "BtnValiderClasses_Click"
+            .Name = "BtnValiderClasses"
         End With
         Set rngBtnValiderClasses = Nothing
     End With
 End Sub
 
-Private Sub btnValiderClasses_Click()
+'@EntryPoint
+Private Sub BtnValiderClasses_Click()
     ' ***REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
     
     ' *** CONFIRMATION UTILISATEUR
     If Not (MsgBox("Confirmez-vous le nom de classe et le nombre d'élèves indiqués? " & _
                    "Il ne sera pas possible de les modifier par la suite.", vbYesNo) = vbYes) Then GoTo EOP
     
     ' *** VERIFICATION VALEUR ***
-    If Not (isDonneesClassesOK) Then
+    If Not (IsDonneesClassesOK) Then
         MsgBox "ATTENTION: les données entrées pour les classes ne sont pas valides, cela empêche de passer à la prochaine étape." & vbNewLine & _
                "Cela peut provenir de trois éléments:" & vbNewLine & _
                "   - Nombre de classes qui ne correspond pas à la taille du tableau," & vbNewLine & _
@@ -899,15 +1026,15 @@ Private Sub btnValiderClasses_Click()
     
     ' *** SUPPRESSION BOUTONS ***
     With ThisWorkbook.Worksheets(strPage1)
-        .Range(.Cells(byLigTabClasses, byColTabClasses), .Cells(byLigTabClasses + getNombreClasses + 2, byColTabClasses + 1)).Locked = True
+        .Range(.Cells(byLigTabClasses, byColTabClasses), .Cells(byLigTabClasses + GetNombreClasses + 2, byColTabClasses + 1)).Locked = True
         ThisWorkbook.Worksheets(strPage1).Buttons.Delete
     End With
 
     ' *** APPEL PROCEDURE ***
-    creerDropdownCycle
+    CreerDropdownCycle
     
     ' ***REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 
     ' *** MESSAGE INFORMATION ***
     MsgBox "Choisissez maintenant le cycle d'étude (2, 3 ou 4). Un tableau de compétences s'affichera alors en-dessous et changera en fonction du cycle choisi. " & vbNewLine & vbNewLine & _
@@ -922,19 +1049,17 @@ Private Sub btnValiderClasses_Click()
     
 EOP:
     ' ***REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 End Sub
 
-Private Sub creerDropdownCycle()
+Private Sub CreerDropdownCycle()
     ' *** DECLARATION VARIABLES ***
     Dim byLigChoixCycle As Byte
     Dim rngDrpChoixCycle As Range
-    Dim drpChoixCycle As Variant
     Dim rngBtnValiderCompetences As Range
-    Dim btnValiderCompetences As Variant
 
     ' *** AFFECTATION VARIABLES ***
-    byLigChoixCycle = byLigTabClasses + getNombreClasses + 5
+    byLigChoixCycle = byLigTabClasses + GetNombreClasses + 5
     
     With ThisWorkbook.Worksheets(strPage1)
         ' *** MISE EN FORME ***
@@ -951,54 +1076,53 @@ Private Sub creerDropdownCycle()
         
         ' *** AJOUT COMBOBOX CHOIX CYCLE ***
         Set rngDrpChoixCycle = .Cells(byLigChoixCycle, byColTabCompet + 1)
-        Set drpChoixCycle = .DropDowns.Add(rngDrpChoixCycle.Left, rngDrpChoixCycle.Top, _
-                                           rngDrpChoixCycle.Width, rngDrpChoixCycle.Height)
-        With drpChoixCycle
+        With .DropDowns.Add(rngDrpChoixCycle.Left, rngDrpChoixCycle.Top, _
+                            rngDrpChoixCycle.Width, rngDrpChoixCycle.Height)
             .DropDownLines = 3
             .AddItem "Cycle 2", 1
             .AddItem "Cycle 3", 2
             .AddItem "Cycle 4", 3
-            .Name = "drpChoixCycle"
             .OnAction = "drpChoixCycle_Change"
+            .Name = "drpChoixCycle"
         End With
     
         ' *** AJOUT BOUTON 'VALIDER CLASSES' ***
         Set rngBtnValiderCompetences = .Cells(byLigChoixCycle, byColTabCompet + 3)
-        Set btnValiderCompetences = .Buttons.Add(rngBtnValiderCompetences.Left, rngBtnValiderCompetences.Top, _
-                                                 rngBtnValiderCompetences.Width, rngBtnValiderCompetences.Height)
-        With btnValiderCompetences
+        With .Buttons.Add(rngBtnValiderCompetences.Left, rngBtnValiderCompetences.Top, _
+                          rngBtnValiderCompetences.Width, rngBtnValiderCompetences.Height)
             .Caption = "Valider les compétences"
-            .OnAction = "btnValiderCompetences_Click"
-            .Name = "btnValiderCompetences"
+            .OnAction = "BtnValiderCompetences_Click"
+            .Name = "BtnValiderCompetences"
         End With
     End With
 End Sub
 
-Public Sub drpChoixCycle_Change()
+'@EntryPoint
+Public Sub DrpChoixCycle_Change()
     ' *** DECLARATION VARIABLES ***
     Dim iDrpValue As Byte
     Dim byLigTabCompet As Byte
     
     ' *** AFFECTATION VARIABLES ***
     iDrpValue = ThisWorkbook.Worksheets(strPage1).DropDowns("drpChoixCycle").Value
-    byLigTabCompet = byLigTabClasses + getNombreClasses + 7
+    byLigTabCompet = byLigTabClasses + GetNombreClasses + 7
     
     ' *** REFRESH ECRAN OFF ***
-    disableUpdates
+    DisableUpdates
     
     ' *** OPERATION ***
     If iDrpValue = 1 Or iDrpValue = 2 Or iDrpValue = 3 Then
         With ThisWorkbook.Worksheets(strPage1)
             .Range(.Cells(byLigTabCompet, byColTabCompet), .Cells(byLigTabCompet + 100, byColTabCompet)).EntireRow.Delete
         End With
-        creerTableauChoixCompetences iDrpValue
+        CreerTableauChoixCompetences iDrpValue
     End If
     
     ' *** REFRESH ECRAN ON ***
-    enableUpdates
+    EnableUpdates
 End Sub
 
-Private Sub creerTableauChoixCompetences(ByVal iDrpValue As Byte)
+Private Sub CreerTableauChoixCompetences(ByVal iDrpValue As Byte)
     ' *** DECLARATION VARIABLES ***
     Dim byLigTabCompet As Byte
     Dim byLigDomaine As Byte
@@ -1018,11 +1142,11 @@ Private Sub creerTableauChoixCompetences(ByVal iDrpValue As Byte)
     arrAttributCompet(4) = "Abréviation"
 
     ' *** AFFECTATION VARIABLES ***
-    arrDomaines = getArrayDomaines()
-    arrCompetences = getArrayCompetences(iDrpValue + 1)
-    byLigTabCompet = byLigTabClasses + getNombreClasses + 7
+    arrDomaines = GetArrayDomaines
+    arrCompetences = GetArrayCompetences(iDrpValue + 1)
+    byLigTabCompet = byLigTabClasses + GetNombreClasses + 7
     byLigCompetence = byLigTabCompet + 1
-    byNbCompetences = getNombreCompetences(iDrpValue + 1)
+    byNbCompetences = GetNombreCompetences(iDrpValue + 1)
 
     With ThisWorkbook.Worksheets(strPage1)
         ' *** AJOUT DOMAINES & COMPETENCES ***
@@ -1037,7 +1161,7 @@ Private Sub creerTableauChoixCompetences(ByVal iDrpValue As Byte)
         Next iDomaine
         
         ' *** MISE EN FORME ***
-        creerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabCompet, byColTabCompet), _
+        CreerTableau strNomWs:=strPage1, rngCelOrigine:=.Cells(byLigTabCompet, byColTabCompet), _
                      iHaut:=byNbCompetences + 1, iLarg:=4, iOrientation:=1, _
                      arrAttribut:=arrAttributCompet, byCouleur:=byCouleurCompet_1
                      
@@ -1055,11 +1179,12 @@ Private Sub creerTableauChoixCompetences(ByVal iDrpValue As Byte)
     End With
 End Sub
 
-Private Sub btnValiderCompetences_Click()
+'@EntryPoint
+Private Sub BtnValiderCompetences_Click()
     Dim byNbCompetences As Byte
     Dim byLigTabCompet As Byte
 
-    If Not (isInfosOK) Then
+    If Not (IsInfosOK) Then
         MsgBox "Il manque des données dans le tableau d'informations (tableau gris). " & _
                "Merci de compléter tous les cases avant de passer à l'étape suivante."
         Exit Sub
@@ -1068,31 +1193,31 @@ Private Sub btnValiderCompetences_Click()
     If Not (MsgBox("Confirmez-vous la sélection des compétences à évaluer? " & _
                    "Il ne sera pas possible de la modifier par la suite.", vbYesNo) = vbYes) Then Exit Sub
 
-    If Not (isCompetOK) Then
+    If Not (IsCompetOK) Then
         MsgBox "ATTENTION: votre choix de compétences n'est pas valide. Cela peut provenir de deux éléments: " & vbNewLine & _
                "    - Moins de deux compétences sélectionnées pour évaluation" & vbNewLine & _
-               "    - Abréviations utilisées trop longues (limite max = 7 caractères)" & vbNewLine & _
+               "    - Abréviations utilisées trop longues (7 caractères max)" & vbNewLine & _
                "Vérifiez ces deux propriétés et corrigez-les pour continuer."
         Exit Sub
     End If
     
     With ThisWorkbook.Worksheets(strPage1)
-        byLigTabCompet = byLigTabClasses + getNombreClasses + 7
-        byNbCompetences = getNombreCompetences(.Shapes("drpChoixCycle").ControlFormat.Value + 1)
+        byLigTabCompet = byLigTabClasses + GetNombreClasses + 7
+        byNbCompetences = GetNombreCompetences(.Shapes("drpChoixCycle").ControlFormat.Value + 1)
         
-        disableUpdates
+        DisableUpdates
         .Cells.Font.Bold = False
         .Range(.Cells(byLigTabLogiciel + 1, byColTabLogiciel + 1).Address).Activate
         .Range(.Cells(byLigTabInfos, byColTabInfos + 1), .Cells(byLigTabInfos + 3, byColTabInfos + 1)).Locked = True
         .Range(.Cells(byLigTabCompet + 1, byColTabCompet + 2), .Cells(byLigTabCompet + byNbCompetences, byColTabCompet + 3)).Locked = True
         .Shapes("drpChoixCycle").ControlFormat.Enabled = False
-        deleteAllButtons ThisWorkbook.Worksheets(strPage1)
-        unprotectWorkbook
-        addWorksheet (strPage2)
-        creerTableauListeClasses
-        protectAllWorksheets
-        protectWorkbook
-        enableUpdates
+        DeleteAllButtons ThisWorkbook.Worksheets(strPage1)
+        UnprotectWorkbook
+        AddWorksheet (strPage2)
+        InitPage2
+        ProtectAllWorksheets
+        ProtectWorkbook
+        EnableUpdates
     End With
     
     MsgBox "Vous arrivez maintenant sur la page de gestion des listes de classes. " & _

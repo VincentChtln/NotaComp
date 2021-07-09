@@ -1,23 +1,72 @@
 Attribute VB_Name = "Module5"
+
+' *******************************************************************************
+'                       GNU General Public License V3
+'   Copyright (C)
+'   Date: 2021
+'   Auteur: Vincent Chatelain
+'
+'   This file is part of NotaComp.
+'
+'   NotaComp is free software: you can redistribute it and/or modify
+'   it under the terms of the GNU General Public License as published by
+'   the Free Software Foundation, either version 3 of the License, or
+'   (at your option) any later version.
+'
+'   NotaComp is distributed in the hope that it will be useful,
+'   but WITHOUT ANY WARRANTY; without even the implied warranty of
+'   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+'   GNU General Public License for more details.
+'
+'   You should have received a copy of the GNU General Public License
+'   along with NotaComp. If not, see <https://www.gnu.org/licenses/>.
+'
+'
+'               GNU General Public License V3 - Traduction française
+'
+'   Ce fichier fait partie de NotaComp.
+'
+'   NotaComp est un logiciel libre ; vous pouvez le redistribuer ou le modifier
+'   suivant les termes de la GNU General Public License telle que publiée par la
+'   Free Software Foundation, soit la version 3 de la Licence, soit (à votre gré)
+'   toute version ultérieure.
+'
+'   NotaComp est distribué dans l’espoir qu’il sera utile, mais SANS AUCUNE
+'   GARANTIE : sans même la garantie implicite de COMMERCIALISABILITÉ
+'   ni d’ADÉQUATION À UN OBJECTIF PARTICULIER. Consultez la GNU
+'   General Public License pour plus de détails.
+'
+'   Vous devriez avoir reçu une copie de la GNU General Public License avec NotaComp;
+'   si ce n’est pas le cas, consultez : <http://www.gnu.org/licenses/>.
+'
+' *******************************************************************************
+
+
+' *******************************************************************************
+'                           Module 5 - Gestion des modules
 ' *******************************************************************************
 '
-'                               Module de MAJ
+'   Fonctions publiques
 '
-'   Fonctions
-'       isWBOpen(strWBName As String) As Boolean
-'       isVBProjectProtected(wb As Workbook) As Boolean
-'       isFolderEmpty(strFolderPath As String) As Boolean
-'       properFolderPath(strFolderPath As String) As String
-'       properWBName(strFileName As String) As String
-'       getModulesFolder(strUserName As String) As String
+'   Procédures publiques
 '
-'   Procédures
-'       displayUserName()
-'       updateVBProject()
-'       exportModulesToFolder()
-'       importModulesToVBProject()
-'       deleteFilesInFolder(strFolderPath As String)
-'       deleteModulesInVBProject(wb As Workbook)
+'   Fonctions privées
+'       IsWBOpen(ByVal strWBName As String) As Boolean
+'       IsVBProjectProtected(ByRef wb As Workbook) As Boolean
+'       IsFolderEmpty(ByVal strFolderPath As String) As Boolean
+'       ProperFolderPath(ByVal strFolderPath As String) As String
+'       ProperWBName(ByVal strFileName As String) As String
+'       GetDestFolder() As String
+'
+'   Procédures privées
+'       DisplayUserName()
+'       DisplayVBFilesInRecursiveFolder()
+'       DeleteFile(ByVal strFileFullPath As String)
+'       DeleteVBFilesInRecursiveFolder(ByVal strFolderPath As String)
+'       UpdateVBProject()
+'       ExportVBCode()
+'       DeleteVBCode(ByRef wbTarget As Workbook)
+'       ImportVBCode(ByRef wbTarget As Workbook)
 '
 ' *******************************************************************************
 
@@ -27,232 +76,363 @@ Option Explicit
 '                                   Constantes
 ' *******************************************************************************
 
-Const strGitFolder1 As String = "C:\Users\Utilisateur\Documents\GitHub\OutilNotationCompetence\"
-Const strGitFolder2 As String = "C:\Users\vincent.chatelain\Documents\GitHub\NotaComp\"
-Const strGitFolder3 As String = "D:\Documents\GitHub\NotaComp\src\"
-Const strWbSource As String = "NotaComp_Dev.xlsm"
+Const strGitFolder      As String = "D:\Documents\GitHub\NotaComp\"
+Const strWbSource       As String = "NotaComp_Dev.xlsm"
 
 ' *******************************************************************************
-'                                   Fonctions
+'                               Fonctions publiques
 ' *******************************************************************************
 
-Function isWBOpen(strWBName As String) As Boolean
+' *******************************************************************************
+'                               Procédures publiques
+' *******************************************************************************
+
+' *******************************************************************************
+'                               Fonctions privées
+' *******************************************************************************
+
+Private Function IsWBOpen(ByVal strWbName As String) As Boolean
     Dim wb As Workbook
-    isWBOpen = False
+    IsWBOpen = False
     For Each wb In Workbooks
-        If wb.Name = strWBName Then
-            isWBOpen = True
+        If wb.Name = strWbName Then
+            IsWBOpen = True
             Exit For
         End If
     Next wb
 End Function
 
-Function isVBProjectProtected(wb As Workbook) As Boolean
-    isVBProjectProtected = (wb.VBProject.Protection = vbext_pp_locked)
+Private Function IsVBProjectProtected(ByRef wb As Workbook) As Boolean
+    IsVBProjectProtected = (wb.VBProject.Protection = vbext_pp_locked)
 End Function
 
-Function isFolderEmpty(strFolderPath As String) As Boolean
-    isFolderEmpty = (Dir(properFolderPath(strFolderPath) & "*.*") = vbNullString)
+Private Function IsFolderEmpty(ByVal strFolderPath As String) As Boolean
+    IsFolderEmpty = (Dir(ProperFolderPath(strFolderPath) & "*.*") = vbNullString)
 End Function
 
-Function properFolderPath(strFolderPath As String) As String
-    properFolderPath = strFolderPath
-    If Right(properFolderPath, 1) <> "\" Then
-        properFolderPath = properFolderPath & "\"
-    End If
+Private Function ProperFolderPath(ByVal strFolderPath As String) As String
+    ProperFolderPath = strFolderPath
+    If Right$(ProperFolderPath, 1) <> "\" Then ProperFolderPath = ProperFolderPath & "\"
 End Function
 
-Function properWBName(strFileName As String) As String
-    properWBName = strFileName
-    If Right(properWBName, 5) <> ".xlsm" Then
-        properWBName = properWBName & ".xlsm"
-    End If
+Private Function ProperWBName(ByVal strFileName As String) As String
+    ProperWBName = strFileName
+    If Right$(ProperWBName, 5) <> ".xlsm" Then ProperWBName = ProperWBName & ".xlsm"
 End Function
 
-Function getDestFolder(strUserName As String) As String
-    getDestFolder = ""
-    Select Case strUserName
-    Case Is = "Utilisateur"
-        getDestFolder = strGitFolder1
-    Case Is = "CHATELAIN Vincent"
-        getDestFolder = strGitFolder2
-    Case Is = "Vincent Chatelain"
-        getDestFolder = strGitFolder3
-    End Select
+Private Function GetDestFolder() As String
+    GetDestFolder = strGitFolder
+End Function
+
+Private Function GetVBFilesInRecursiveFolder(ByVal strFolderPath As String) As String()
+    ' *** VARIABLES ***
+    Dim strFile         As String
+    Dim strFullPath     As String
+    Dim lFile           As Long
+    Dim lNumFiles       As Long
+    Dim arrFiles()      As String
+    Dim arrNewFiles()   As String
+    Dim lFolder         As Long
+    Dim lNumFolders     As Long
+    Dim arrFolders()    As String
+    
+    ' *** AFFECTATION VALEURS ***
+    lNumFiles = 0
+    lNumFolders = 0
+    strFolderPath = ProperFolderPath(strFolderPath)
+    strFile = Dir(strFolderPath & "*.*", vbDirectory)
+    
+    ' *** COMPTAGE FICHIERS + STOCKAGE DOSSIER DANS ARRAY ***
+    While Len(strFile) <> 0
+        If Left$(strFile, 1) <> "." Then
+            strFullPath = strFolderPath & strFile
+            
+            ' *** AJOUT DANS ARRAY DOSSIERS ***
+            If (GetAttr(strFullPath) And vbDirectory) = vbDirectory Then
+                ReDim Preserve arrFolders(0 To lNumFolders) As String
+                arrFolders(lNumFolders) = strFullPath
+                lNumFolders = lNumFolders + 1
+            
+            ' *** AJOUT FICHIERS DANS ARRAY VBA ***
+            Else
+                If (Right$(strFile, 4) = ".cls" Or Right$(strFile, 4) = ".bas" Or Right$(strFile, 4) = ".frm" Or Right$(strFile, 4) = ".frx") Then
+                    ReDim Preserve arrFiles(0 To lNumFiles) As String
+                    arrFiles(lNumFiles) = strFullPath
+                    lNumFiles = lNumFiles + 1
+                End If
+            End If
+        End If
+        strFile = Dir()
+    Wend
+    
+    ' *** BOUCLE SUR ARRAY DE DOSSIERS ***
+    For lFolder = 0 To lNumFolders - 1
+        arrNewFiles = GetVBFilesInRecursiveFolder(arrFolders(lFolder))
+        If GetSizeOfArray(arrFiles) <> 0 Then
+            arrFiles = Split(Join(arrFiles, Chr(1)) & Chr(1) & Join(arrNewFiles, Chr(1)), Chr(1))
+        Else
+            arrFiles = arrNewFiles
+        End If
+    Next lFolder
+    
+    ' *** RENVOI VALEUR ***
+    GetVBFilesInRecursiveFolder = arrFiles
+            
 End Function
 
 ' *******************************************************************************
-'                                   Procédures
+'                               Procédures privées
 ' *******************************************************************************
 
-Public Sub displayUserName()
+'@EntryPoint
+Public Sub DisplayUserName()
     MsgBox "Current user is '" & Application.UserName & "'."
 End Sub
 
-Private Sub updateVBProject()
-    exportModulesToFolder
-    importModulesToVBProject
+Public Sub DisplayVBFilesInRecursiveFolder()
+    ' *** VARIABLES ***
+    Dim strFile         As Variant
+    Dim arrFiles()      As String
+    Dim strListFiles    As String
+    
+    ' *** RECUPERATION ARRAY FICHIERS ***
+    arrFiles = GetVBFilesInRecursiveFolder(GetDestFolder() & "src\")
+    
+    ' *** CONSTRUCTION ET AFFICHAGE LISTE ***
+    For Each strFile In arrFiles
+        strListFiles = strListFiles & "  - " & strFile & vbNewLine
+    Next strFile
+    MsgBox ("Liste fichiers VBA : " & vbNewLine & strListFiles)
 End Sub
 
-Private Sub exportModulesToFolder()
-    ' *** DECLARATION VARIABLES ***
-    Dim strFileName As String
-    Dim strExportFolder As String
-    Dim bExportFolderOK As Boolean
-    Dim FSO As New FileSystemObject
-    Dim cpnFile As VBIDE.VBComponent
+Private Sub DeleteFile(ByVal strFileFullPath As String)
+    If Dir(strFileFullPath) <> vbNullString Then
+        SetAttr strFileFullPath, vbNormal
+        Kill strFileFullPath
+    End If
+End Sub
 
-    ' *** VERIFICATION CONDITIONS EXPORT ***
-    If isVBProjectProtected(Workbooks(strWbSource)) Then
-        MsgBox ("Projet VB protégé, accès refusé.")
+Private Sub DeleteVBFilesInRecursiveFolder(ByVal strFolderPath As String)
+    Dim arrFiles() As String
+    Dim varFile As Variant
+    
+    strFolderPath = ProperFolderPath(strFolderPath)
+    arrFiles = GetVBFilesInRecursiveFolder(strFolderPath)
+    
+    If GetSizeOfArray(arrFiles) <> 0 Then
+        For Each varFile In arrFiles
+            On Error Resume Next
+            Kill varFile
+            On Error GoTo 0
+        Next varFile
+    End If
+End Sub
+
+'@EntryPoint
+Private Sub UpdateVBProject()
+    ' *** VARIABLES ***
+    Dim wbTarget As Workbook
+    Dim bWbOK As Boolean
+    Dim bWbOpen As Boolean
+    Dim strWbName As String
+    Dim strWbFolder As String
+    
+    DisableUpdates
+    
+    ' *** EXPORT NOUVEAU CODE ***
+    If (vbYes = MsgBox("Suppression ancien code et export nouveau code ?", vbYesNo)) Then ExportVBCode
+    
+    ' *** CREATION NOUVEAU CLASSEUR NOTACOMP ***
+    If (vbYes = MsgBox("Création nouveau Workbook 'NotaComp' ?", vbYesNo)) Then
+        Set wbTarget = Workbooks.Add
+        strWbName = "NotaComp"
+        strWbFolder = ProperFolderPath(GetDestFolder())
+        Call ImportVBCode(wbTarget)
+        Call DeleteFile(strWbFolder & strWbName & ".xlsm")
+        wbTarget.SaveAs Filename:=strWbFolder & strWbName, FileFormat:=xlOpenXMLWorkbookMacroEnabled
+        Call Application.Run("'NotaComp.xlsm'!InitNotaComp")
+        wbTarget.Save
+        wbTarget.Close
+        GoTo EOS
+    End If
+    
+    ' *** MAJ 1 CLASSEUR UNIQUEMENT ***
+    If (vbYes = MsgBox("MAJ classeur existant ?", vbYesNo)) Then
+        bWbOK = False
+        bWbOpen = False
+        While Not bWbOK
+            strWbName = ProperWBName(InputBox("Nom du classeur cible ?", "Nom du classeur", strWbName))
+            If IsWBOpen(strWbName) Then
+                bWbOK = True
+                bWbOpen = True
+            Else
+                strWbFolder = ProperFolderPath(InputBox("Chemin vers le classeur cible", "Chemin du dossier", strWbFolder))
+                If Dir(strWbFolder & strWbName) <> vbNullString Then
+                    bWbOK = True
+                    Call Workbooks.Open(strWbFolder & strWbName)
+                    While Not IsWBOpen(strWbName)
+                    Wend
+                Else
+                    If vbCancel = MsgBox("Fichier non trouvé, vérifier l'orthographe", vbOKCancel) Then Exit Sub
+                End If
+            End If
+        Wend
+        Set wbTarget = Workbooks(strWbName)
+        If IsVBProjectProtected(wbTarget) Then
+            Call MsgBox("Projet VB bloqué, impossible d'importer le nouveau code.", vbInformation)
+        Else
+            Call DeleteVBCode(wbTarget)
+            Call ImportVBCode(wbTarget)
+            wbTarget.Save
+            If Not bWbOpen Then wbTarget.Close
+        End If
+        GoTo EOS
+    End If
+    
+    ' *** MAJ TOUS LES CLASSEURS D'UN DOSSIER ***
+    If (vbYes = MsgBox("MAJ plusieurs classeurs existants situés dans le même dossier ?", vbYesNo)) Then
+        
+    End If
+    
+EOS:
+    EnableUpdates
+End Sub
+
+Private Sub ExportVBCode()
+    ' *** CONSTANTES ***
+    Const Padding = 24
+    
+    ' *** VARIABLES ***
+    Dim VBComp              As VBIDE.VBComponent
+    Dim byNbExportedFiles   As Byte
+    Dim strPath             As String
+    Dim strFolder           As String
+    Dim strSubFolder        As String
+    Dim strExtension        As String
+    Dim bFolderOK           As Boolean
+    
+    ' *** VERIFICATION ACCES VBPROJECT ***
+    If IsVBProjectProtected(Workbooks(strWbSource)) Then
+        Call MsgBox("Projet VB protégé, accès refusé.")
         Exit Sub
     End If
     
-    ' *** AFFECTATION VARIABLES ***
-    strExportFolder = getDestFolder(Application.UserName)
-    bExportFolderOK = False
+    ' *** SUPPRESSION ANCIENS FICHIERS ***
+    strFolder = ProperFolderPath(ThisWorkbook.Path)
+    Call DeleteVBFilesInRecursiveFolder(strFolder)
     
-    ' *** SUPPRESSION MODULES DOSSIER DEST ***
-    Do
-        If FSO.FolderExists(strExportFolder) Then
-            If vbNo = MsgBox("Confirmation export des nouveaux modules ?", vbYesNo) Then GoTo Annulation
-            bExportFolderOK = True
-        Else
-            If vbCancel = InputBox("Le dossier indiqué n'existe pas. Modifiez le chemin d'accès ou annulez l'export.", "Export folder path", strExportFolder) Then GoTo Annulation
-        End If
-    Loop Until bExportFolderOK
+    ' *** AJOUT DOSSIERS SI NECESSAIRE ***
+    If Dir(strFolder & "Documents", vbDirectory) = vbNullString Then MkDir (strFolder & "Documents")
+    If Dir(strFolder & "UserForms", vbDirectory) = vbNullString Then MkDir (strFolder & "UserForms")
+    If Dir(strFolder & "Modules", vbDirectory) = vbNullString Then MkDir (strFolder & "Modules")
     
-    ' *** SUPPRESSION ANCIENS MODULES ***
-    deleteFilesInFolder (strExportFolder & "Modules\")
-    deleteFilesInFolder (strExportFolder & "UserForms\")
-    
-    ' *** EXPORT MODULES ***
-    For Each cpnFile In Workbooks(strWbSource).VBProject.VBComponents
-        If cpnFile.Type = vbext_ct_StdModule Then
-            strFileName = cpnFile.Name & ".bas"
-            cpnFile.Export properFolderPath(strExportFolder & "Modules\") & strFileName
-        ElseIf cpnFile.Type = vbext_ct_MSForm Then
-            strFileName = cpnFile.Name & ".frm"
-            cpnFile.Export properFolderPath(strExportFolder & "UserForms\") & strFileName
-        End If
-    Next cpnFile
-    
-    ' *** MESSAGE INFORMATION ***
-    MsgBox ("Export terminé avec succès.")
-    Exit Sub
-    
-    ' *** MESSAGE ANNULATION ***
-Annulation:
-    MsgBox ("Opération annulée.")
-End Sub
-
-Private Sub importModulesToVBProject()
-    ' *** DECLARATION VARIABLES ***
-    Dim bWBOK As Boolean
-    Dim wbTarget As Workbook
-    Dim strWBFolder As String
-    Dim strWBName As String
-    Dim strImportFolder As String
-    Dim bImportFolderOK As Boolean
-    Dim strImportFile As String
-    Dim FSO As New FileSystemObject
-    
-    ' *** VERIFICATION WB + OUVERTURE ***
-    bWBOK = False
-    Do
-        strWBName = properWBName(InputBox("Nom du classeur cible ?", "Nom du classeur", strWBName))
-        If isWBOpen(strWBName) Then
-            bWBOK = True
-        Else
-            strWBFolder = properFolderPath(InputBox("Chemin vers le classeur cible", "Chemin du dossier", strWBFolder))
-            MsgBox (strWBFolder & strWBName)
-            If FSO.FolderExists(strWBFolder) And FSO.FileExists(strWBFolder & strWBName) Then
-                bWBOK = True
-                MsgBox ("Ouverture du WB '" & strWBFolder & strWBName & "'.")
-                Workbooks.Open (strWBFolder & strWBName)
+    ' *** EXPORT NOUVEAU CODE ***
+    For Each VBComp In ThisWorkbook.VBProject.VBComponents
+        If VBComp.CodeModule.CountOfLines > 0 Then
+            Select Case VBComp.Type
+                Case vbext_ct_Document
+                    strSubFolder = "\Documents"
+                    strExtension = ".cls"
+                Case vbext_ct_MSForm
+                    strSubFolder = "\UserForms"
+                    strExtension = ".frm"
+                Case vbext_ct_StdModule
+                    strSubFolder = "\Modules"
+                    strExtension = ".bas"
+                Case Else
+                    GoTo NextIteration
+            End Select
+            
+            On Error Resume Next
+            Err.Clear
+            
+            strPath = strFolder & strSubFolder & "\" & VBComp.Name & strExtension
+            Call VBComp.Export(strPath)
+            
+            If Err.Number <> 0 Then
+                Call MsgBox("Error #" & Str(Err.Number) & ". Failed to export " & VBComp.Name & " to " & strPath, vbCritical)
             Else
-                If vbCancel = MsgBox("Fichier non trouvé, vérifier l'orthographe", vbOKCancel) Then Exit Sub
+                byNbExportedFiles = byNbExportedFiles + 1
+                Debug.Print "Exported " & Left$(VBComp.Name & ":" & Space(Padding), Padding) & strPath
             End If
+    
+            On Error GoTo 0
         End If
-    Loop Until bWBOK
-    Set wbTarget = Workbooks(strWBName)
+NextIteration:
+    Next VBComp
     
-    ' *** VERFICATION PROTECTION VB_PROJECT ***
-    If isVBProjectProtected(wbTarget) Then
-        MsgBox ("Projet VBA protégé, accès refusé.")
-        GoTo Annulation
-    End If
-    
-    ' *** VERIFICATION DOSSIER IMPORT ***
-    bImportFolderOK = False
-    Do
-        strImportFolder = properFolderPath(InputBox("Chemin vers le dossier de modules", vbOKCancel, getModulesFolder(Application.UserName)))
-        If Len(strImportFolder) = 0 Then GoTo Annulation
-        If FSO.FolderExists(strImportFolder) Then
-            If isFolderEmpty(strImportFolder) Then
-                MsgBox ("Dossier vide.")
-                GoTo Annulation
-            End If
-            bImportFolderOK = True
-        End If
-    Loop Until bImportFolderOK
-    
-    ' *** SUPPRESSION ANCIENS MODULES ***
-    deleteModulesInVBProject wbTarget
-    
-    ' *** IMPORT NOUVEAUX MODULES ***
-    strImportFile = "Module1.bas"
-    Do Until Len(strImportFile) = 0
-        If Right(strImportFile, 4) = ".bas" Or Right(strImportFile, 4) = ".frm" Then
-            If strImportFile <> "Module5.bas" Then wbTarget.VBProject.VBComponents.Import strImportFolder & strImportFile
-        End If
-        strImportFile = Dir()
-    Loop
-    
-    ' *** MODIFICATION DATA MAJ ***
-    Application.ScreenUpdating = False
-    With wbTarget.Worksheets(strPage1)
-        .Unprotect strPassword
-        .Range("G5").Value = strVersion
-        .Range("G6").Value = Format(Now, "MM/dd/yyyy")      ' Affiche la date en format "dd/MM/yyyy"
-        .Protect strPassword
-    End With
-    Application.ScreenUpdating = True
-    
-    ' *** MESSAGE INFORMATION ***
-    MsgBox "Import terminé avec succès."
-    Exit Sub
-    
-    ' *** MESSAGE ANNULATION ***
-Annulation:
-    MsgBox "Opération annulée."
+    Call DisplayTemporaryMessage("Export réussi de " & CStr(byNbExportedFiles) & " fichiers VBA vers " & strFolder, 10)
 End Sub
 
-Private Sub deleteFilesInFolder(strFolderPath As String)
-    ' *** FORMATAGE CHEMIN DOSSIER ***
-    strFolderPath = properFolderPath(strFolderPath)
-    
-    ' *** SUPPRESSION FICHIERS DANS DOSSIER EXPORT ***
-    On Error Resume Next
-    Kill strFolderPath & "\*"   ' Suppression de tous les fichiers du dossier
-    On Error GoTo 0
-    
-    ' *** MESSAGE INFORMATION ***
-    ' MsgBox ("Fichiers VBA supprimés.")
-End Sub
-
-Private Sub deleteModulesInVBProject(wb As Workbook)
+Private Sub DeleteVBCode(ByRef wbTarget As Workbook)
     ' *** DECLARATION VARIABLES ***
-    Dim cpnFile As VBIDE.VBComponent
+    Dim VBProj As VBIDE.VBProject
+    Dim VBComp As VBIDE.VBComponent
+    
+    ' *** AFFECTATION VARIABLES ***
+    Set VBProj = wbTarget.VBProject
     
     ' *** SUPPRESSION FICHIERS VBA ***
-    For Each cpnFile In wb.VBProject.VBComponents
-        If cpnFile.Type = vbext_ct_StdModule Or cpnFile.Type = vbext_ct_MSForm Then
-            wb.VBProject.VBComponents.Remove cpnFile
+    For Each VBComp In VBProj.VBComponents
+        If VBComp.Type <> vbext_ct_Document Then
+            VBProj.VBComponents.Remove VBComp
         End If
-    Next cpnFile
+    Next VBComp
     
     ' *** MESSAGE INFORMATION ***
-    MsgBox ("Modules et UserForm VBA supprimés.")
+    Call DisplayTemporaryMessage("Modules et UserForm VBA supprimés.", 10)
 End Sub
 
+Private Sub ImportVBCode(ByRef wbTarget As Workbook)
+    Dim strImportFolder     As String
+    Dim bWbOK               As Boolean
+    Dim arrVBFiles()        As String
+    Dim varFile             As Variant
+    Dim byNbImportedFiles   As Byte
+    Dim modSource           As Variant
+    Dim modDest             As Variant
+    Dim VBComp              As VBIDE.VBComponent
+
+    If ThisWorkbook.Name = wbTarget.Name Then
+        MsgBox ("Import impossible pour " & wbTarget.Name & " : classeur source")
+        Exit Sub
+    End If
+    
+    If Not IsWBOpen(wbTarget.Name) Then
+        Call MsgBox("Import impossible pour " & wbTarget.Name & " : classeur non ouvert")
+        Exit Sub
+    End If
+    
+    If IsVBProjectProtected(wbTarget) Then
+        Call MsgBox("Import impossible pour " & wbTarget.Name & " : projet VB protégé")
+        Exit Sub
+    End If
+    
+    Call DeleteVBCode(wbTarget)
+    
+    strImportFolder = ProperFolderPath(ThisWorkbook.Path)
+    arrVBFiles = GetVBFilesInRecursiveFolder(strImportFolder)
+    
+    For Each varFile In arrVBFiles
+        If (Right$(varFile, 4) = ".bas" Or Right$(varFile, 4) = ".frm") Then
+            wbTarget.VBProject.VBComponents.Import varFile
+            byNbImportedFiles = byNbImportedFiles + 1
+        End If
+    Next varFile
+    
+    For Each VBComp In ThisWorkbook.VBProject.VBComponents
+        If VBComp.Type = vbext_ct_Document And VBComp.CodeModule.CountOfLines > 0 Then
+            On Error Resume Next
+            Set modSource = VBComp.CodeModule
+            Set modDest = wbTarget.VBProject.VBComponents(VBComp.Name).CodeModule
+            With modDest
+                .DeleteLines StartLine:=1, Count:=.CountOfLines
+                .AddFromString modSource.Lines(1, modSource.CountOfLines)
+            End With
+            byNbImportedFiles = byNbImportedFiles + 1
+            On Error GoTo 0
+        End If
+    Next VBComp
+    
+    Call DisplayTemporaryMessage("Import réussi de " & CStr(byNbImportedFiles) & " fichiers VBA vers " & wbTarget.Name, 10)
+End Sub

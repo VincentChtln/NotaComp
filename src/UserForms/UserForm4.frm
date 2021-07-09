@@ -26,7 +26,7 @@ Option Explicit
 ' *******************************************************************************
 ' UserForm_Initialize()
 ' lbxClasseSource_Change()
-' btnTransfererEleve_Click()
+' BtnTransfererEleve_Click()
 ' *******************************************************************************
 
 ' Initialisation de l'UF
@@ -37,11 +37,11 @@ Private Sub UserForm_Initialize()
     Dim byClasse As Byte
     
     ' *** AFFECTATION VARIABLES ***
-    byNbClasses = getNombreClasses
+    byNbClasses = GetNombreClasses
     
     ' *** AJOUT CLASSES DANS LISTE ***
     For byClasse = 1 To byNbClasses
-        lbxClasseSource.AddItem getNomClasse(byClasse)
+        lbxClasseSource.AddItem GetNomClasse(byClasse)
     Next byClasse
     
     ' *** INITIALISATION INDEX ***
@@ -63,8 +63,8 @@ Private Sub lbxClasseSource_Change()
     lbxClasseDest.Clear
     byClasseSource = lbxClasseSource.ListIndex + 1
     byColClasseSource = 2 * byClasseSource - 1
-    byNbEleves = getNombreEleves(byClasseSource)
-    byNbClasses = getNombreClasses
+    byNbEleves = GetNombreEleves(byClasseSource)
+    byNbClasses = GetNombreClasses
 
     ' *** AJOUT ELEVES DANS LISTE ***
     For byEleve = 1 To byNbEleves
@@ -74,7 +74,7 @@ Private Sub lbxClasseSource_Change()
     ' *** AJOUT CLASSES DANS LISTE TRANSFERT ***
     For byClasseDest = 1 To byNbClasses
         If byClasseDest <> byClasseSource Then
-            lbxClasseDest.AddItem getNomClasse(byClasseDest)
+            lbxClasseDest.AddItem GetNomClasse(byClasseDest)
         End If
     Next byClasseDest
 
@@ -84,7 +84,7 @@ Private Sub lbxClasseSource_Change()
 End Sub
 
 ' Demande de confirmation puis appel de la procédure transfererEleve (Module 2)
-Private Sub btnTransfererEleve_Click()
+Private Sub BtnTransfererEleve_Click()
     ' *** DECLARATION VARIABLES ***
     Dim byClasseSource As Byte
     Dim strClasseSource As String
@@ -95,7 +95,7 @@ Private Sub btnTransfererEleve_Click()
     Dim byEleveDest As Byte
 
     ' *** FERMETURE USERFORM ***
-    unloadAllUserForms
+    UnloadAllUserForms
     
     ' *** AFFECTATION VARIABLES ***
     byEleveSource = lbxEleve.ListIndex + 1
@@ -104,12 +104,12 @@ Private Sub btnTransfererEleve_Click()
     strEleve = ThisWorkbook.Worksheets(strPage2).Cells(byLigListePage2 + byEleveSource, 2 * byClasseSource - 1)
     strClasseSource = lbxClasseSource.Value
     strClasseDest = lbxClasseDest.Value
-    byEleveDest = getIndiceEleve(strEleve, byClasseDest, False)
+    byEleveDest = GetIndiceEleve(strEleve, byClasseDest, False)
 
     ' *** CONFIRMATION TRANSFERT ***
     If vbYes = MsgBox("Vous allez transférer '" & strEleve & "' de la classe '" & strClasseSource & "' vers la classe '" & strClasseDest & "'. " & _
                       "Confirmez-vous cette opération ?", vbYesNo, "Confirmation de transfert") Then
-        transfererEleve byClasseSource, byEleveSource, byClasseDest, byEleveDest
+        TransfererEleve byClasseSource, byEleveSource, byClasseDest, byEleveDest, strEleve
         MsgBox "Élève transféré."
     Else
         MsgBox "Operation annulée."

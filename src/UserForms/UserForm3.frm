@@ -26,7 +26,7 @@ Option Explicit
 ' *******************************************************************************
 ' UserForm_Initialize()
 ' lbxClasse_Change()
-' btnSupprimerEleve_Click()
+' BtnSupprimerEleve_Click()
 ' *******************************************************************************
 
 ' Initialisation de l'UF
@@ -36,11 +36,11 @@ Private Sub UserForm_Initialize()
     Dim byClasse As Byte
     
     ' *** AFFECTATION VARIABLES ***
-    byNbClasses = getNombreClasses
+    byNbClasses = GetNombreClasses
     
     ' *** AJOUT CLASSE DANS LISTE ***
     For byClasse = 1 To byNbClasses
-        lbxClasse.AddItem getNomClasse(byClasse)
+        lbxClasse.AddItem GetNomClasse(byClasse)
     Next byClasse
     
     ' *** INITIALISATION SELECTION ***
@@ -56,7 +56,7 @@ Private Sub lbxClasse_Change()
     
     ' *** AFFECTATION VARIABLES ***
     lbxEleve.Clear
-    byNbEleves = getNombreEleves(lbxClasse.ListIndex + 1)
+    byNbEleves = GetNombreEleves(lbxClasse.ListIndex + 1)
     
     ' *** AJOUT ELEVES DANS LISTE ***
     For byEleve = 1 To byNbEleves
@@ -68,7 +68,7 @@ Private Sub lbxClasse_Change()
 End Sub
 
 ' Demande de confirmation puis appel de la procédure supprimerEleve (Module 2)
-Private Sub btnSupprimerEleve_Click()
+Private Sub BtnSupprimerEleve_Click()
     Dim byClasse As Byte
     Dim strClasse As String
     Dim byEleve As Byte
@@ -81,7 +81,7 @@ Private Sub btnSupprimerEleve_Click()
     
     If vbYes = MsgBox("Vous êtes sur le point de supprimer '" & strEleve & "' de la classe de " & strClasse & ". " & _
                       "Voulez-vous poursuivre ?", vbYesNo) Then
-        supprimerEleve byClasse, byEleve
+        SupprimerEleve byClasse, byEleve
         MsgBox "Élève supprimé"
     Else
         MsgBox "Operation annulée"
