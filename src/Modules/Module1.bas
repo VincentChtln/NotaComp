@@ -1,6 +1,10 @@
 Attribute VB_Name = "Module1"
 
 ' *******************************************************************************
+'   Copyright (C)
+'   Date: 2021
+'   Auteur: Vincent Chatelain
+' *******************************************************************************
 '                               NotaComp
 '
 '   Outil Excel dédié a la notation par compétences en milieu scolaire
@@ -16,10 +20,8 @@ Attribute VB_Name = "Module1"
 '   V2.6    Ajout de UserForm pour la modification des évaluations
 '
 ' *******************************************************************************
+
 '                       GNU General Public License V3
-'   Copyright (C)
-'   Date: 2021
-'   Auteur: Vincent Chatelain
 '
 '   This file is part of NotaComp.
 '
@@ -162,7 +164,7 @@ Public Const byCouleurBilan     As Byte = 45
        Const byLigTabInfos      As Byte = byLigTabLogiciel + 5
        Const byColTabInfos      As Byte = 2
 Public Const byLigTabClasses    As Byte = byLigTabInfos + 6
-       Const byColTabClasses    As Byte = 2
+Public Const byColTabClasses    As Byte = 2
 Public Const byColTabCompet     As Byte = 2
 Public Const byLigListePage2    As Byte = 1
 Public Const byLigListePage3    As Byte = 6
@@ -209,7 +211,15 @@ Public Function GetIndiceClasse(strNomWs As String) As Byte
 End Function
 
 Public Function GetNombreClasses() As Byte
-    GetNombreClasses = CByte(ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses, byColTabClasses + 1).Value)
+    Dim byNbClasses As Byte
+    byNbClasses = ThisWorkbook.Worksheets(strPage1).Cells(byLigTabClasses, byColTabClasses + 1).Value
+    
+    GetNombreClasses = 0
+    If IsNumeric(byNbClasses) Then
+        If (byNbClasses >= byNbClasses_Min) And (byNbClasses <= byNbClasses_Max) Then
+            GetNombreClasses = CByte(byNbClasses)
+        End If
+    End If
 End Function
 
 Public Function GetNombreEleves(ByVal byClasse As Byte) As Byte
@@ -223,13 +233,17 @@ Public Function GetSizeOfArray(ByRef arr As Variant) As Byte
     byDimension = 1
     GetSizeOfArray = 0
     
-    On Error GoTo ErrorHandler
-    Do While True
-        byTaille = byTaille * (UBound(arr, byDimension) - LBound(arr, byDimension) + 1)
-        If (byTaille > 1) Or Not (IsEmpty(arr(1))) Then GetSizeOfArray = byTaille
-        byDimension = byDimension + 1
-    Loop
-    Exit Function
+    If IsArray(arr) Then
+        On Error GoTo ErrorHandler
+        Do While True
+            byTaille = byTaille * (UBound(arr, byDimension) - LBound(arr, byDimension) + 1)
+            byDimension = byDimension + 1
+            GetSizeOfArray = byTaille
+        Loop
+    Else
+        GetSizeOfArray = 0
+        Exit Function
+    End If
     
 ErrorHandler:
     If Err.Number = 13 Then ' Type Mismatch Error
@@ -245,6 +259,7 @@ Public Function GetSizeOfJaggedArray(ByRef arr As Variant) As Byte
     iTailleExter = GetSizeOfArray(arr)
     GetSizeOfJaggedArray = 0
     
+    iTailleExter = GetSizeOfArray(arr)
     For iElement = 1 To iTailleExter
         GetSizeOfJaggedArray = GetSizeOfJaggedArray + GetSizeOfArray(arr(iElement))
     Next iElement
@@ -300,25 +315,28 @@ Public Function GetArrayChoixCompetences() As Variant()
         iDrpValue = .DropDowns("drpChoixCycle").Value
         iCompetTampon = 1
         arrCompet = GetArrayCompetences(iDrpValue + 1)
-        arrTamponSrc = .Range(.Cells(byLigTabCompet + 1, byColTabCompet + 2), _
+        arrTamponSrc = .Range(.Cells(byLigTabCompet + 1, byColTabCompet + 1), _
                               .Cells(byLigTabCompet + GetNombreCompetences(iDrpValue + 1), byColTabCompet + 3))
                               
         ' *** BOUCLE SUR TOUS LES DOMAINES ET COMPETENCES ***
         For iDomaine = 1 To 8
             byNbCompetParDomaine = GetSizeOfArray(arrCompet(iDomaine))
             iCompetChoisie = 1
-            ReDim arrTamponDest(1 To 1)
+            ReDim arrTamponDest(1 To 2, 1 To 1)
             For iCompet = 1 To byNbCompetParDomaine
             
                 ' *** SI 'x' OU 'X' DANS LE TABLEAU, ALORS COPIE ABREVIATION COMPETENCE ***
-                If arrTamponSrc(iCompetTampon, 1) = "X" Or arrTamponSrc(iCompetTampon, 1) = "x" Then
-                    ReDim Preserve arrTamponDest(1 To iCompetChoisie)
-                    arrTamponDest(iCompetChoisie) = arrTamponSrc(iCompetTampon, 2)
+                If arrTamponSrc(iCompetTampon, 2) = "X" Or arrTamponSrc(iCompetTampon, 2) = "x" Then
+                    ReDim Preserve arrTamponDest(1 To 2, 1 To iCompetChoisie)
+                    arrTamponDest(1, iCompetChoisie) = arrTamponSrc(iCompetTampon, 3)
+                    arrTamponDest(2, iCompetChoisie) = Right(arrTamponSrc(iCompetTampon, 1), Len(arrTamponSrc(iCompetTampon, 1)) - 5)
                     iCompetChoisie = iCompetChoisie + 1
                 End If
                 iCompetTampon = iCompetTampon + 1
             Next iCompet
-            arrChoixCompet(iDomaine) = arrTamponDest
+            If Not IsEmpty(arrTamponDest(1, 1)) Then
+                arrChoixCompet(iDomaine) = Application.WorksheetFunction.Transpose(arrTamponDest)
+            End If
         Next iDomaine
     End With
     GetArrayChoixCompetences = arrChoixCompet
@@ -335,8 +353,8 @@ Public Function GetArrayChoixDomaines() As Variant()
     ' *** AFFECTATION VARIABLES ***
     byDomaine2 = 1
     ReDim arrChoixDomaines(1 To 1)
-    arrChoixCompet = GetArrayChoixCompetences
-    arrDomaines = GetArrayDomaines
+    arrChoixCompet = GetArrayChoixCompetences()
+    arrDomaines = GetArrayDomaines()
     
     ' *** CALCUL ARRAY ***
     For byDomaine = 1 To 8
@@ -414,13 +432,13 @@ Public Sub DisableUpdates()
     End With
 End Sub
 
-Public Sub DisplayTemporaryMessage(ByVal strMessage As String, ByVal byDuration As Byte)
+Public Sub DisplayTemporaryMessage(ByVal strMessage As String, Optional ByVal byDuration As Byte = 10)
     Application.StatusBar = strMessage
     Application.OnTime Now + TimeSerial(0, 0, byDuration), "ClearStatusBar"
 End Sub
 
 Public Sub ClearStatusBar()
-    Application.StatusBar = ""
+    Application.StatusBar = vbNullString
 End Sub
 
 Public Sub FreezePanes(ByRef wdw As Window, ByVal byLig As Byte, ByVal byCol As Byte)
@@ -433,6 +451,10 @@ End Sub
 
 Public Sub UnloadAllUserForms()
     Dim uf As UserForm
+    
+    For Each uf In VBA.UserForms
+        If TypeOf uf Is UserForm Then uf.Hide
+    Next uf
     
     For Each uf In VBA.UserForms
         If TypeOf uf Is UserForm Then Unload uf
@@ -536,7 +558,7 @@ End Function
 
 Private Function IsNbClassesOK() As Boolean
     IsNbClassesOK = False
-    If GetNombreClasses <> -1 Then IsNbClassesOK = True
+    If GetNombreClasses <> 0 Then IsNbClassesOK = True
 End Function
 
 Private Function IsNbEleveOK(ByVal varNbEleve As Variant) As Boolean
@@ -698,24 +720,34 @@ Private Function IsCompetOK() As Boolean
     Dim byDomaine As Byte
     Dim byCompet As Byte
     Dim strCompet As Variant
+    Dim byNbCompetParDomaine As Byte
     
     arrChoixCompet = GetArrayChoixCompetences
     IsCompetOK = True
     
-    If GetSizeOfJaggedArray(arrChoixCompet) < 2 Then
+    ' *** VERIF 2 COMPET MIN ***
+    If GetSizeOfJaggedArray(arrChoixCompet) / 2 < 3 Then
         IsCompetOK = False
         Exit Function
-    Else
-        For byDomaine = 1 To 8
-            If GetSizeOfArray(arrChoixCompet(byDomaine)) <> 0 Then
-                For byCompet = 1 To UBound(arrChoixCompet(byDomaine), 1)
-                    If Len(CStr(arrChoixCompet(byDomaine)(byCompet))) > 7 Then
-                        IsCompetOK = False
-                    End If
-                Next byCompet
-            End If
-        Next byDomaine
     End If
+    
+    ' *** VERIF NOM COMPET VALIDE ***
+    For byDomaine = 1 To 8
+        byNbCompetParDomaine = GetSizeOfArray(arrChoixCompet(byDomaine)) / 2
+        ' *** 1 COMPET -> SUPPRESSION D'UNE DIMENSION DU SOUS-ARRAY ***
+        If byNbCompetParDomaine = 1 Then
+            If Len(CStr(arrChoixCompet(byDomaine)(1))) > 7 Then
+                IsCompetOK = False
+            End If
+        ' *** PLUSIEURS COMPET -> JAGGED ARRAY CORRECT ***
+        ElseIf byNbCompetParDomaine > 1 Then
+            For byCompet = 1 To UBound(arrChoixCompet(byDomaine), 1)
+                If Len(CStr(arrChoixCompet(byDomaine)(byCompet, 1))) > 7 Then
+                    IsCompetOK = False
+                End If
+            Next byCompet
+        End If
+    Next byDomaine
 End Function
 
 ' *******************************************************************************
@@ -1207,7 +1239,7 @@ Private Sub BtnValiderCompetences_Click()
         
         DisableUpdates
         .Cells.Font.Bold = False
-        .Range(.Cells(byLigTabLogiciel + 1, byColTabLogiciel + 1).Address).Activate
+        .Range(.Cells(byLigTabLogiciel + 1, byColTabLogiciel + 1).Address).Select
         .Range(.Cells(byLigTabInfos, byColTabInfos + 1), .Cells(byLigTabInfos + 3, byColTabInfos + 1)).Locked = True
         .Range(.Cells(byLigTabCompet + 1, byColTabCompet + 2), .Cells(byLigTabCompet + byNbCompetences, byColTabCompet + 3)).Locked = True
         .Shapes("drpChoixCycle").ControlFormat.Enabled = False

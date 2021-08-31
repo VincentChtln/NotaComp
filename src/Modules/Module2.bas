@@ -76,7 +76,7 @@ Public Function GetIndiceEleve(ByVal strEleve As String, ByVal byClasse As Byte,
     
     ' *** AFFECTATION VARIABLES ***
     byNbEleves = GetNombreEleves(byClasse)
-    GetIndiceEleve = -1
+    GetIndiceEleve = 0
     
     With ThisWorkbook
         ' *** RECHERCHE INDICE EXACT ***
@@ -227,12 +227,10 @@ Public Sub AjouterEleve(ByVal byClasse As Byte, ByVal byEleve As Byte, ByVal str
     EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
-    MsgBox "Élève ajouté.", vbInformation, "Ajout d'élève"
-    
+    ' MsgBox "Élève ajouté.", vbInformation, "Ajout d'élève"
 End Sub
 
 Public Sub SupprimerEleve(ByVal byClasse As Byte, ByVal byEleve As Byte)
-    
     ' *** DECLARATION VARIABLES ***
     Dim byNbEleves As Byte
     Dim byColClasse As Byte
@@ -302,7 +300,7 @@ Public Sub SupprimerEleve(ByVal byClasse As Byte, ByVal byEleve As Byte)
     EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
-    MsgBox "Élève supprimé.", vbInformation, "Suppression d'élève"
+    ' MsgBox "Élève supprimé.", vbInformation, "Suppression d'élève"
 End Sub
 
 Public Sub TransfererEleve(ByVal byClasseSource As Byte, ByVal byEleveSource As Byte, ByVal byClasseDest As Byte, ByVal byEleveDest As Byte, ByVal strEleve As String)
@@ -366,9 +364,9 @@ Private Sub BtnValiderListes_Click()
                    "mais il sera impossible de re-générer intégralement les listes.", vbYesNo) = vbYes) Then Exit Sub
 
     ' *** REFRESH ECRAN OFF ***
-    UserForm5.Show vbModeless
-    UnprotectWorkbook
-    DisableUpdates
+    Call UserForm6.Show(vbModeless)
+    Call UnprotectWorkbook
+    Call DisableUpdates
     
     ' *** AFFECTATION VARIABLES ***
     byNbClasses = GetNombreClasses
@@ -382,24 +380,24 @@ Private Sub BtnValiderListes_Click()
         AddWorksheet (GetNomPage3(byClasse))
         InitPage3 byClasse, byNbEleves
         byAvancement = byAvancement + 1
-        UserForm5.updateAvancement byAvancement, byAvancementTotal
+        UserForm6.updateAvancement byAvancement, byAvancementTotal
 
         ' *** AJOUT PAGE 4 ***
         AddWorksheet (GetNomPage4(byClasse))
         InitPage4 byClasse, byNbEleves
         byAvancement = byAvancement + 1
-        UserForm5.updateAvancement byAvancement, byAvancementTotal
+        UserForm6.updateAvancement byAvancement, byAvancementTotal
     Next byClasse
     
     ' *** MODIFICATION BOUTON ***
     With ThisWorkbook.Worksheets(strPage2)
         .Activate
-        '        With .Buttons("BtnValiderListes")
-        '            .LockedText = False
-        '            .Caption = "Modifier les listes"
-        '            .OnAction = "BtnModifierListes_Click"
-        '            '.Name = "BtnModifierListes"
-        '        End With
+        With .Buttons("BtnValiderListes")
+            .LockedText = False
+            .Caption = "Gérer les listes"
+            .OnAction = "BtnGererListes_Click"
+            .Name = "BtnGererListes"
+        End With
     End With
     
     ' *** BLOQUAGE PAGE 2 ***
@@ -408,7 +406,7 @@ Private Sub BtnValiderListes_Click()
     ' *** PROTECTION + REFRESH ECRAN ON ***
     ProtectAllWorksheets
     ProtectWorkbook
-    Unload UserForm5
+    Unload UserForm6
     EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
@@ -417,8 +415,9 @@ Private Sub BtnValiderListes_Click()
 End Sub
 
 '@EntryPoint
-Private Sub BtnModifierListes_Click()
-    UserForm1.Show
+Private Sub BtnGererListes_Click()
+    Call UserForm1.SetUp
+    Call UserForm1.Show(vbModeless)
 End Sub
 
 

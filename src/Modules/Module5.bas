@@ -415,8 +415,10 @@ Private Sub ImportVBCode(ByRef wbTarget As Workbook)
     
     For Each varFile In arrVBFiles
         If (Right$(varFile, 4) = ".bas" Or Right$(varFile, 4) = ".frm") Then
-            wbTarget.VBProject.VBComponents.Import varFile
-            byNbImportedFiles = byNbImportedFiles + 1
+            If (Right$(varFile, 11) <> "Module5.bas") Then
+                wbTarget.VBProject.VBComponents.Import varFile
+                byNbImportedFiles = byNbImportedFiles + 1
+            End If
         End If
     Next varFile
     

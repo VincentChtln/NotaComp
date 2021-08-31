@@ -114,8 +114,8 @@ Public Sub InitPage4(byClasse As Byte, byNbEleves As Byte)
         End With
 
         ' *** EN-TETE ***
-        arrChoixCompet = GetArrayChoixCompetences
-        arrDomaines = GetArrayDomaines
+        arrChoixCompet = GetArrayChoixCompetences()
+        arrDomaines = GetArrayDomaines()
         ReDim arrTampon(1 To 3, 1 To 45)
         byColArray = 1
         
@@ -199,33 +199,39 @@ Private Sub BtnActualiserResultats_Click()
     byClasse = GetIndiceClasse(sPage4)
     byNbEvals = GetNombreEvals(byClasse)
     
+    ' *** VERIFICATION PRESENCE EVALUATIONS ***
+    If byNbEvals = 0 Then
+        Call DisplayTemporaryMessage("Erreur Module4 'BtnActualiserResultats_Click': Aucune évaluation à calculer.")
+        Exit Sub
+    End If
+    
     ' *** USERFORM 5 - AFFICHAGE AVANCEMENT ***
     byAvancementActuel = 0
     byAvancementTotal = byNbEvals + 1
-    UserForm5.Show vbModeless
+    Call UserForm6.Show(vbModeless)
 
     ' *** UPDATES OFF ***
-    DisableUpdates
+    Call DisableUpdates
 
     ' *** RECALCUL NOTES EVAL ***
     For byEval = 1 To byNbEvals
-        CalculNote byClasse, byEval
+        Call CalculNote(byClasse, byEval)
         byAvancementActuel = byAvancementActuel + 1
-        UserForm5.updateAvancement byAvancementActuel, byAvancementTotal
+        Call UserForm6.updateAvancement(byAvancementActuel, byAvancementTotal)
     Next byEval
     
     ' *** CALCUL MOYENNES PAR DOMAINE ET PAR TRIMESTRE ***
-    CalculMoyenneDomainesEtAnnee byClasse
+    Call CalculMoyenneDomainesEtAnnee(byClasse)
     byAvancementActuel = byAvancementActuel + 1
-    UserForm5.updateAvancement byAvancementActuel, byAvancementTotal
+    Call UserForm6.updateAvancement(byAvancementActuel, byAvancementTotal)
     
     ' *** UPDATES ON ***
-    UserForm5.Hide
-    EnableUpdates
+    Call UserForm6.Hide
+    Call EnableUpdates
     
     ' *** MESSAGE INFORMATION ***
-    ThisWorkbook.Worksheets(sPage4).Activate
-    MsgBox ("Données mises à jour.")
+    Call ThisWorkbook.Worksheets(sPage4).Activate
+    Call MsgBox("Données mises à jour.")
 End Sub
 
 Private Sub CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
