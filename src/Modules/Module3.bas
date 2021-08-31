@@ -260,9 +260,10 @@ Public Sub CalculNote(ByVal byClasse As Byte, ByVal byEval As Byte)
     Dim byEleve         As Byte         ' Index de l'élève
     Dim byNbEleves      As Byte         ' Nombre d'élèves de la classe
     Dim byCompet        As Byte         ' Index de la compétence évaluée
-    Dim byNbCompetEval  As Byte         ' Nombre de compétences notées pendant l'évaluation
-                                        ' (variable à supprimer après choix des compétences de l'éval par UserForm)
     Dim dbSommeCoeff    As Double       ' Somme des coefficients de chaque compétence
+    Dim bNoteRecue      As Boolean      ' Valide si l'élève a reçu au moins une note sur l'évaluation
+    Dim byNbCompetNotes As Byte         ' Nombre de compétences notées
+    Dim byNbElevesNotes As Byte         ' Nombre d'élèves notés
     
     With ThisWorkbook.Worksheets(GetNomPage3(byClasse))
         ' *** COL DEBUT/FIN EVAL ***
@@ -278,40 +279,45 @@ Public Sub CalculNote(ByVal byClasse As Byte, ByVal byEval As Byte)
         byNbEleves = GetNombreEleves(byClasse)
         arrLettres = .Range(.Cells(byLigListePage3 + 1, byColEval), .Cells(byLigListePage3 + byNbEleves, byColNote - 1))
         ReDim arrNotes(0 To byNbEleves)
-        byNbCompetEval = 0
         dbSommeCoeff = 0#
         arrNotes(0) = 0#
         
-        ' *** CALCUL NOMBRE COMPET EVAL ***
-        For byCompet = 1 To byColNote - byColEval
-            If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
-                byNbCompetEval = byNbCompetEval + 1
-                dbSommeCoeff = dbSommeCoeff + arrCoeff(1, byCompet)
-            End If
-        Next byCompet
-        
         ' *** PARCOURS DES ELEVES ***
-        If byNbCompetEval > 0 Then
-            For byEleve = 1 To byNbEleves
-                arrNotes(byEleve) = 0#
-                ' *** PARCOURS DES COMPETENCES ***
-                For byCompet = 1 To byColNote - byColEval
-                    ' *** AJOUT DE LA COMPETENCE SI COEFF <> 0
-                    If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) Then
-                        arrNotes(byEleve) = arrNotes(byEleve) + CDbl(ConvertirLettreEnValeur(CStr(arrLettres(byEleve, byCompet)))) * CDbl(arrCoeff(1, byCompet))
-                    End If
-                Next byCompet
-                ' *** CALCUL NOTE FINALE ***
+        byNbElevesNotes = 0
+        For byEleve = 1 To byNbEleves
+            bNoteRecue = False
+            byNbCompetNotes = 0
+            dbSommeCoeff = 0
+            arrNotes(byEleve) = 0#
+            ' *** PARCOURS DES COMPETENCES ***
+            For byCompet = 1 To byColNote - byColEval
+                ' *** AJOUT DE LA COMPETENCE SI COEFF <> 0
+                If Not (IsEmpty(arrCoeff(1, byCompet))) And IsNumeric(arrCoeff(1, byCompet)) And Not (IsEmpty(arrLettres(byEleve, byCompet))) Then
+                    arrNotes(byEleve) = arrNotes(byEleve) + CDbl(ConvertirLettreEnValeur(CStr(arrLettres(byEleve, byCompet)))) * CDbl(arrCoeff(1, byCompet))
+                    bNoteRecue = True
+                    byNbCompetNotes = byNbCompetNotes + 1
+                    dbSommeCoeff = dbSommeCoeff + arrCoeff(1, byCompet)
+                End If
+            Next byCompet
+            ' *** CALCUL NOTE FINALE ***
+            If (bNoteRecue = True) Then
                 arrNotes(byEleve) = Format(5# * arrNotes(byEleve) / CDbl(dbSommeCoeff), "Standard")
                 arrNotes(0) = arrNotes(0) + arrNotes(byEleve)
-                ' *** ACTUALISATION AVANCEMENT ***
-                UserForm6.updateAvancement byEleve, byNbEleves
-            Next byEleve
-            ' *** CALCUL MOYENNE CLASSE ***
-            arrNotes(0) = Format(arrNotes(0) / CDbl(byNbEleves), "Standard")
-            ' *** ECRITURE DES CELLULES ***
-            .Range(.Cells(byLigListePage3, byColNote), .Cells(byLigListePage3 + byNbEleves, byColNote)) = Application.WorksheetFunction.Transpose(arrNotes)
+                byNbElevesNotes = byNbElevesNotes + 1
+            Else
+                arrNotes(byEleve) = " "
+            End If
+            ' *** ACTUALISATION AVANCEMENT ***
+            UserForm6.updateAvancement byEleve, byNbEleves
+        Next byEleve
+        ' *** CALCUL MOYENNE CLASSE ***
+        If (byNbElevesNotes > 0) Then
+            arrNotes(0) = Format(arrNotes(0) / CDbl(byNbElevesNotes), "Standard")
+        Else
+            arrNotes(0) = ""
         End If
+        ' *** ECRITURE DES CELLULES ***
+        .Range(.Cells(byLigListePage3, byColNote), .Cells(byLigListePage3 + byNbEleves, byColNote)) = Application.WorksheetFunction.Transpose(arrNotes)
     End With
 End Sub
 
