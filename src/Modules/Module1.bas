@@ -171,9 +171,9 @@ Public Const byLigListePage3    As Byte = 6
 Public Const byLigListePage4    As Byte = 3
 
 ' *** NOTES REFERENCE ***
-Public Const dblNoteA_Min       As Double = 3.5
-Public Const dblNoteB_Min       As Double = 2.5
-Public Const dblNoteC_Min       As Double = 1.5
+Public Const dblNoteA_Min       As Double = 3.4
+Public Const dblNoteB_Min       As Double = 2.4
+Public Const dblNoteC_Min       As Double = 1.4
 Public Const dblNoteD_Min       As Double = 0
 
 ' *******************************************************************************

@@ -258,9 +258,11 @@ Private Sub CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
     End With
     arrChoixDomaines = GetArrayChoixDomaines
     byNbDomaines = GetSizeOfArray(arrChoixDomaines)
-    ReDim arrCoeff(1 To 4 * (byNbDomaines + 1))
-    For lColSource = 1 To UBound(arrCoeff, 1)
-        arrCoeff(lColSource) = 0#
+    ReDim arrCoeff(1 To byNbEleves, 1 To 4 * (byNbDomaines + 1))
+    For lColSource = 1 To UBound(arrCoeff, 2)
+        For byEleve = 1 To byNbEleves
+            arrCoeff(byEleve, lColSource) = 0#
+        Next byEleve
     Next lColSource
     ReDim arrDest(1 To byNbEleves, 1 To 4 * (byNbDomaines + 1))
     bEvalOK = False
@@ -293,21 +295,34 @@ Private Sub CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
                     ' *** VERIFICATION DOMAINE VALIDE (PAR SECURITE) ***
                     If (byIndiceDomaine <> 0) Then
                         dbCoeffCompet = CDbl(arrSource(byLigListePage3, lColSource))
-                        arrCoeff(4 * (byIndiceDomaine - 1) + byTrimestre) = arrCoeff(4 * (byIndiceDomaine - 1) + byTrimestre) + CDbl(arrSource(byLigListePage3, lColSource))
-                        arrCoeff(4 * byIndiceDomaine) = arrCoeff(4 * byIndiceDomaine) + CDbl(arrSource(byLigListePage3, lColSource))
                         For byEleve = 1 To byNbEleves
-                            arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) = arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
-                            arrDest(byEleve, 4 * byIndiceDomaine) = arrDest(byEleve, 4 * byIndiceDomaine) + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
+                            If Not (IsEmpty(arrSource(byLigListePage3 + byEleve, lColSource))) Then
+                                ' *** AJOUT COEFF DOMAINE POUR CHAQUE ELEVE ***
+                                arrCoeff(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) = arrCoeff(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) _
+                                                                                           + CDbl(arrSource(byLigListePage3, lColSource))
+                                arrCoeff(byEleve, 4 * byIndiceDomaine) = arrCoeff(byEleve, 4 * byIndiceDomaine) + CDbl(arrSource(byLigListePage3, lColSource))
+                                
+                                ' *** AJOUT NOTE PONDEREE DOMAINE POUR CHAQUE ELEVE ***
+                                arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) = arrDest(byEleve, 4 * (byIndiceDomaine - 1) + byTrimestre) _
+                                                                                          + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
+                                arrDest(byEleve, 4 * byIndiceDomaine) = arrDest(byEleve, 4 * byIndiceDomaine) _
+                                                                      + dbCoeffCompet * CDbl(ConvertirLettreEnValeur(arrSource(byLigListePage3 + byEleve, lColSource)))
+                            End If
                         Next byEleve
                     End If
                     
                 ' *** AJOUT MOYENNE PONDEREE DANS TRIMESTRE ***
                 Else
-                    arrCoeff(4 * byNbDomaines + byTrimestre) = arrCoeff(4 * byNbDomaines + byTrimestre) + dbCoeffEval
-                    arrCoeff(4 * (byNbDomaines + 1)) = arrCoeff(4 * (byNbDomaines + 1)) + dbCoeffEval
                     For byEleve = 1 To byNbEleves
-                        arrDest(byEleve, 4 * byNbDomaines + byTrimestre) = arrDest(byEleve, 4 * byNbDomaines + byTrimestre) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
-                        arrDest(byEleve, 4 * (byNbDomaines + 1)) = arrDest(byEleve, 4 * (byNbDomaines + 1)) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
+                        If Not (IsEmpty(arrSource(byLigListePage3 + byEleve, lColSource))) And Not (arrSource(byLigListePage3 + byEleve, lColSource) = " ") Then
+                            ' *** AJOUT COEFF EVAL POUR CHAQUE ELEVE ***
+                            arrCoeff(byEleve, 4 * byNbDomaines + byTrimestre) = arrCoeff(byEleve, 4 * byNbDomaines + byTrimestre) + dbCoeffEval
+                            arrCoeff(byEleve, 4 * (byNbDomaines + 1)) = arrCoeff(byEleve, 4 * (byNbDomaines + 1)) + dbCoeffEval
+                            
+                            ' *** AJOUT NOTE PONDEREE EVAL POUR CHAQUE ELEVE ***
+                            arrDest(byEleve, 4 * byNbDomaines + byTrimestre) = arrDest(byEleve, 4 * byNbDomaines + byTrimestre) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
+                            arrDest(byEleve, 4 * (byNbDomaines + 1)) = arrDest(byEleve, 4 * (byNbDomaines + 1)) + dbCoeffEval * CDbl(arrSource(byLigListePage3 + byEleve, lColSource))
+                        End If
                     Next byEleve
                     bEvalOK = False
                 End If
@@ -318,16 +333,18 @@ Private Sub CalculMoyenneDomainesEtAnnee(ByVal byClasse As Byte)
     ' *** CALCUL VALEURS FINALES ***
     For lColDest = LBound(arrDest, 2) To UBound(arrDest, 2)
         For byEleve = 1 To byNbEleves
-            If Not (IsEmpty(arrDest(byEleve, lColDest))) And Not (IsEmpty(arrCoeff(lColDest))) Then
+            If Not (IsEmpty(arrDest(byEleve, lColDest))) And Not (IsEmpty(arrCoeff(byEleve, lColDest))) And Not (arrCoeff(byEleve, lColDest) = 0#) Then
             
                 ' *** CALCUL MOYENNE DOMAINES ***
                 If lColDest <= 4 * byNbDomaines Then
-                    arrDest(byEleve, lColDest) = ConvertirValeurEnLettre(arrDest(byEleve, lColDest) / arrCoeff(lColDest))
+                    arrDest(byEleve, lColDest) = ConvertirValeurEnLettre(arrDest(byEleve, lColDest) / arrCoeff(byEleve, lColDest))
                     
                 ' *** CALCUL MOYENNE TRIMESTRE ***
                 Else
-                    arrDest(byEleve, lColDest) = arrDest(byEleve, lColDest) / arrCoeff(lColDest)
+                    arrDest(byEleve, lColDest) = arrDest(byEleve, lColDest) / arrCoeff(byEleve, lColDest)
                 End If
+            Else
+                arrDest(byEleve, lColDest) = " "
             End If
         Next byEleve
     Next lColDest
