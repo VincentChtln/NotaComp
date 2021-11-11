@@ -1,1 +1,7 @@
-~$*.xlsm
+DOSSIERS
+Archives/
+Documents officiels/
+
+FICHIERS
+*.xlsm
+*.docx
