@@ -1,7 +1,8 @@
-DOSSIERS
-Archives/
-Documents officiels/
-
-FICHIERS
+# FICHIERS
 *.xlsm
 *.docx
+
+# DOSSIERS
+Archives/
+Documents officiels/
+Debug/
