@@ -385,8 +385,12 @@ End Function
 '                               Procédures publiques
 ' *******************************************************************************
 
-Public Sub ProtectWorkbook()
-    ThisWorkbook.Protect Password:=strPassword, Structure:=True, Windows:=True
+Public Sub ProtectWorkbook(byVal blnEtat As Boolean)
+    If (blnState)
+        ThisWorkbook.Protect Password:=strPassword, Structure:=True, Windows:=True
+    Else
+        ThisWorkbook.Unprotect Password:=strPassword
+    End If
 End Sub
 
 Public Sub UnprotectWorkbook()
